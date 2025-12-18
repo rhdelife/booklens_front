@@ -26,6 +26,7 @@ export const getApiBaseUrl = () => {
   }
 
   // 개발 환경에서만 로컬호스트 사용
+  // 백엔드 서버가 localhost:3000에서 실행 중이어야 함
   return 'http://localhost:3000/api'
 }
 
@@ -34,6 +35,14 @@ let _apiBaseUrl = null
 export const API_BASE_URL = (() => {
   if (_apiBaseUrl === null) {
     _apiBaseUrl = getApiBaseUrl()
+
+    // 디버깅: 현재 환경과 API URL 로깅
+    console.log('🔧 API Configuration:', {
+      mode: import.meta.env.MODE,
+      isProd: import.meta.env.PROD,
+      envVar: import.meta.env.VITE_API_BASE_URL || 'not set',
+      resolvedUrl: _apiBaseUrl,
+    })
 
     // 프로덕션에서 환경 변수가 없으면 경고
     if (import.meta.env.PROD && !_apiBaseUrl) {
