@@ -5,11 +5,13 @@ import {
   validateEmail,
   validatePassword,
   validatePasswordConfirm,
+  validateName,
 } from '../utils/validation'
 import { startGoogleLogin } from '../services/oauth'
 
 const SignupPage = () => {
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState({})
@@ -24,6 +26,9 @@ const SignupPage = () => {
     switch (field) {
       case 'email':
         validation = validateEmail(value)
+        break
+      case 'name':
+        validation = validateName(value)
         break
       case 'password':
         validation = validatePassword(value, { minLength: 6 })
@@ -53,12 +58,14 @@ const SignupPage = () => {
 
     // 전체 폼 검증
     const emailValidation = validateEmail(email)
+    const nameValidation = validateName(name)
     const passwordValidation = validatePassword(password, { minLength: 6 })
     const passwordConfirmValidation = validatePasswordConfirm(password, confirmPassword)
 
-    if (!emailValidation.isValid || !passwordValidation.isValid || !passwordConfirmValidation.isValid) {
+    if (!emailValidation.isValid || !nameValidation.isValid || !passwordValidation.isValid || !passwordConfirmValidation.isValid) {
       setErrors({
         email: emailValidation.error,
+        name: nameValidation.error,
         password: passwordValidation.error,
         confirmPassword: passwordConfirmValidation.error,
       })
@@ -68,9 +75,7 @@ const SignupPage = () => {
     setLoading(true)
 
     try {
-      // 이메일에서 이름 추출 (선택적)
-      const name = email.split('@')[0]
-      await signup(email, password, name)
+      await signup(email, password, name.trim())
       navigate('/')
     } catch (err) {
       console.error('Signup failed:', err)
@@ -120,6 +125,31 @@ const SignupPage = () => {
               />
               {errors.email && (
                 <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2">
+                이름
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  validateField('name', e.target.value)
+                }}
+                onBlur={(e) => validateField('name', e.target.value)}
+                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-gray-900 placeholder:text-gray-400 text-sm ${errors.name ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                placeholder="이름 또는 닉네임을 입력하세요"
+              />
+              {errors.name && (
+                <p className="mt-1 text-xs text-red-600">{errors.name}</p>
               )}
             </div>
 
@@ -177,26 +207,6 @@ const SignupPage = () => {
               {errors.confirmPassword && (
                 <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
               )}
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="agree-terms"
-                name="agree-terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-gray-900 focus:ring-gray-900 border-gray-300 rounded"
-              />
-              <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-600">
-                <a href="#" className="text-gray-900 hover:text-gray-700 transition-colors">
-                  이용약관
-                </a>
-                과{' '}
-                <a href="#" className="text-gray-900 hover:text-gray-700 transition-colors">
-                  개인정보처리방침
-                </a>
-                에 동의합니다
-              </label>
             </div>
 
             <button

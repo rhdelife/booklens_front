@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import ProfileModal from './ProfileModal'
+import DefaultProfileIcon from './DefaultProfileIcon'
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth()
@@ -68,15 +69,16 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <>
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={user?.profile_image_url || '/midoriya.jpg'}
-                      alt="Profile"
+                    <div
                       onClick={() => setShowProfileModal(true)}
-                      className="w-9 h-9 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity border-2 border-gray-200"
-                      onError={(e) => {
-                        e.target.src = '/midoriya.jpg'
-                      }}
-                    />
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <DefaultProfileIcon
+                        size={36}
+                        name={user?.nickname || user?.name || user?.email}
+                        className="border-2 border-gray-200"
+                      />
+                    </div>
                     <div className="hidden sm:block">
                       <span className="text-gray-700 text-sm font-normal">
                         {user?.nickname || user?.name || user?.email}

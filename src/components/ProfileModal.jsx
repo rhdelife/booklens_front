@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { authAPI } from '../services/api'
 import ReadingPersonaBadge from './ReadingPersonaBadge'
 import { getOrCalculatePersona } from '../utils/readingPersona'
+import ImageCropModal from './ImageCropModal'
+import DefaultProfileIcon from './DefaultProfileIcon'
 
 const ALIAS_OPTIONS = [
   '독서 초보',
@@ -23,6 +25,8 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
   const [loading, setLoading] = useState(false)
   const [books, setBooks] = useState([])
   const [persona, setPersona] = useState(null)
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
   
   // 편집 폼 상태
   const [formData, setFormData] = useState({
@@ -63,7 +67,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         alias: currentUser.alias || '',
         bio: currentUser.bio || '책을 사랑하는 사람입니다. 매일 새로운 이야기를 만나고 있어요.',
         profileImage: null,
-        profileImagePreview: currentUser.profile_image_url || '/midoriya.jpg',
+        profileImagePreview: null,
       })
     }
   }, [isOpen, currentUser])
@@ -79,14 +83,23 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
 
       const reader = new FileReader()
       reader.onloadend = () => {
-        setFormData({
-          ...formData,
-          profileImage: reader.result,
-          profileImagePreview: reader.result,
-        })
+        // 크롭 모달 열기
+        setSelectedImage(reader.result)
+        setShowCropModal(true)
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  // 크롭 완료
+  const handleCropComplete = (croppedImage) => {
+    setFormData({
+      ...formData,
+      profileImage: croppedImage,
+      profileImagePreview: croppedImage,
+    })
+    setShowCropModal(false)
+    setSelectedImage(null)
   }
 
   // 프로필 저장
@@ -128,7 +141,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         alias: currentUser.alias || '',
         bio: currentUser.bio || '책을 사랑하는 사람입니다. 매일 새로운 이야기를 만나고 있어요.',
         profileImage: null,
-        profileImagePreview: currentUser.profile_image_url || '/midoriya.jpg',
+        profileImagePreview: null,
       })
     }
     setIsEditing(false)
@@ -139,12 +152,17 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
   const displayName = currentUser?.nickname || currentUser?.name || '사용자'
   const displayAlias = currentUser?.alias || '독서 초보'
   const displayBio = currentUser?.bio || '책을 사랑하는 사람입니다. 매일 새로운 이야기를 만나고 있어요.'
-  const displayImage = currentUser?.profile_image_url || '/midoriya.jpg'
+  const hasCustomImage = isEditing ? formData.profileImagePreview : false
 
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={onClose}
+      onClick={(e) => {
+        // 크롭 모달이 열려있으면 배경 클릭 무시
+        if (!showCropModal) {
+          onClose()
+        }
+      }}
     >
       <div 
         className="bg-white rounded-2xl max-w-md w-full border border-gray-100 mx-auto my-auto max-h-[90vh] overflow-y-auto"
@@ -178,11 +196,19 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
           {/* Profile Image */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-4">
-              <img
-                src={isEditing ? formData.profileImagePreview : displayImage}
-                alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
-              />
+              {hasCustomImage ? (
+                <img
+                  src={formData.profileImagePreview}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                />
+              ) : (
+                <DefaultProfileIcon
+                  size={128}
+                  name={displayName}
+                  className="border-4 border-gray-200"
+                />
+              )}
               {isEditing && (
                 <label className="absolute bottom-0 right-0 bg-gray-900 text-white p-2 rounded-full cursor-pointer hover:bg-gray-800 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,6 +347,17 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
           </div>
         </div>
       </div>
+
+      {/* 이미지 크롭 모달 */}
+      <ImageCropModal
+        isOpen={showCropModal}
+        imageSrc={selectedImage}
+        onCrop={handleCropComplete}
+        onClose={() => {
+          setShowCropModal(false)
+          setSelectedImage(null)
+        }}
+      />
     </div>
   )
 }

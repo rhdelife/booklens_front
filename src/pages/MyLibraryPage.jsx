@@ -154,13 +154,13 @@ const MyLibraryPage = () => {
         const savedPostings = localStorage.getItem('bookPostings')
         if (savedPostings) {
           const allPostings = JSON.parse(savedPostings)
-          
+
           // user가 있으면 user.id로 필터링, 없으면 tempUserId로 필터링
           let userId = user?.id
           if (!userId) {
             userId = localStorage.getItem('tempUserId')
           }
-          
+
           if (userId) {
             const myPostings = allPostings.filter(
               posting => posting.authorId === userId || posting.userId === userId
@@ -496,8 +496,8 @@ const MyLibraryPage = () => {
                     setSearchResults([])
                   }}
                   className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm ${searchMode === 'isbn'
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                     }`}
                 >
                   ISBN 검색
@@ -510,8 +510,8 @@ const MyLibraryPage = () => {
                     setBookSearchError('')
                   }}
                   className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm ${searchMode === 'title'
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                     }`}
                 >
                   제목/저자 검색
@@ -656,9 +656,8 @@ const MyLibraryPage = () => {
                       }
                     }}
                     placeholder="예: 아침을 여는 심리학"
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm ${
-                      formErrors.title ? 'border-red-300' : 'border-gray-200'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm ${formErrors.title ? 'border-red-300' : 'border-gray-200'
+                      }`}
                     required
                   />
                   {formErrors.title && (
@@ -677,9 +676,8 @@ const MyLibraryPage = () => {
                       }
                     }}
                     placeholder="예: 김철수"
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm ${
-                      formErrors.author ? 'border-red-300' : 'border-gray-200'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm ${formErrors.author ? 'border-red-300' : 'border-gray-200'
+                      }`}
                     required
                   />
                   {formErrors.author && (
@@ -721,9 +719,8 @@ const MyLibraryPage = () => {
                     }}
                     placeholder="예: 300"
                     min="1"
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm ${
-                      formErrors.totalPage ? 'border-red-300' : 'border-gray-200'
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm ${formErrors.totalPage ? 'border-red-300' : 'border-gray-200'
+                      }`}
                   />
                   {formErrors.totalPage && (
                     <p className="mt-1 text-xs text-red-600">{formErrors.totalPage}</p>
@@ -915,8 +912,8 @@ const MyLibraryPage = () => {
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="text-xl font-semibold text-gray-900 pr-4">{book.title}</h3>
                           <span className={`text-xs font-medium px-3 py-1 rounded-lg whitespace-nowrap ${book.status === 'completed'
-                              ? 'bg-gray-100 text-gray-700'
-                              : 'bg-gray-100 text-gray-700'
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-gray-100 text-gray-700'
                             }`}>
                             {book.status === 'completed' ? '완독' : '읽는 중'}
                           </span>
@@ -940,25 +937,6 @@ const MyLibraryPage = () => {
                             </p>
                           )}
                         </div>
-
-                        {book.status === 'reading' && (
-                          <div className="mb-4">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                navigate(`/book/${book.id}`)
-                              }}
-                              className="text-gray-700 font-medium hover:text-gray-900 transition-colors mb-2 text-sm"
-                            >
-                              책 만나러 가기 →
-                            </button>
-                            {!isReading && (
-                              <p className="text-xs text-gray-400">
-                                카드를 클릭하면 독서를 시작할 수 있습니다
-                              </p>
-                            )}
-                          </div>
-                        )}
                       </div>
 
                       {/* Progress Bar */}

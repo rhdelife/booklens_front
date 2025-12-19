@@ -17,8 +17,8 @@ const BookCard = ({ book, onClick }) => {
   const calculateDaysLeft = (returnDate) => {
     if (!returnDate) return null
     const today = new Date()
-    const return = new Date(returnDate)
-    const diffTime = return - today
+    const returnDateObj = new Date(returnDate)
+    const diffTime = returnDateObj - today
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays
   }

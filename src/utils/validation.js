@@ -191,6 +191,32 @@ export const validateRating = (rating) => {
 }
 
 /**
+ * 이름/닉네임 검증
+ */
+export const validateName = (name) => {
+  if (!name || name.trim() === '') {
+    return { isValid: false, error: '이름을 입력해주세요.' }
+  }
+
+  const trimmedName = name.trim()
+  if (trimmedName.length < 2) {
+    return { isValid: false, error: '이름은 최소 2자 이상이어야 합니다.' }
+  }
+
+  if (trimmedName.length > 20) {
+    return { isValid: false, error: '이름은 최대 20자까지 입력 가능합니다.' }
+  }
+
+  // 특수문자 제한 (한글, 영문, 숫자, 공백만 허용)
+  const nameRegex = /^[가-힣a-zA-Z0-9\s]+$/
+  if (!nameRegex.test(trimmedName)) {
+    return { isValid: false, error: '이름은 한글, 영문, 숫자만 사용 가능합니다.' }
+  }
+
+  return { isValid: true, error: null }
+}
+
+/**
  * 여러 필드 검증 (객체 형태)
  */
 export const validateForm = (formData, validationRules) => {
