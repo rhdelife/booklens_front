@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { authAPI } from '../services/api'
+import ReadingPersonaBadge from './ReadingPersonaBadge'
+import { getOrCalculatePersona } from '../utils/readingPersona'
 
 const ALIAS_OPTIONS = [
   '독서 초보',
@@ -20,6 +22,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [books, setBooks] = useState([])
+  const [persona, setPersona] = useState(null)
   
   // 편집 폼 상태
   const [formData, setFormData] = useState({
@@ -37,13 +40,19 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
       const savedBooks = localStorage.getItem('myLibraryBooks')
       if (savedBooks) {
         try {
-          setBooks(JSON.parse(savedBooks))
+          const parsedBooks = JSON.parse(savedBooks)
+          setBooks(parsedBooks)
+          
+          // 페르소나 계산
+          const userId = currentUser?.id || localStorage.getItem('tempUserId') || 'anonymous'
+          const calculatedPersona = getOrCalculatePersona(parsedBooks, userId)
+          setPersona(calculatedPersona)
         } catch (error) {
           console.error('Failed to parse books from localStorage:', error)
         }
       }
     }
-  }, [isOpen])
+  }, [isOpen, currentUser])
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -167,8 +176,8 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         {/* Content */}
         <div className="p-6">
           {/* Profile Image */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative mb-4">
               <img
                 src={isEditing ? formData.profileImagePreview : displayImage}
                 alt="Profile"
@@ -189,6 +198,10 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
                 </label>
               )}
             </div>
+            {/* Persona Badge */}
+            {persona && !isEditing && (
+              <ReadingPersonaBadge persona={persona} size="md" />
+            )}
           </div>
 
           {/* Profile Info */}

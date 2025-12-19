@@ -4,6 +4,11 @@
  */
 
 export const getApiBaseUrl = () => {
+  // 로컬 개발 환경에서는 항상 localhost 사용 (환경 변수 무시)
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3000/api'
+  }
+
   // 환경 변수가 설정되어 있으면 사용
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL

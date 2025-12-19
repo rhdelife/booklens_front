@@ -56,16 +56,10 @@ const Navbar = () => {
                 Community
               </Link>
               <Link
-                to="/gallery"
+                to="/recommend"
                 className="text-[15px] text-gray-600 hover:text-gray-900 transition-colors font-normal"
               >
-                Gallery
-              </Link>
-              <Link
-                to="/map"
-                className="text-[15px] text-gray-600 hover:text-gray-900 transition-colors font-normal"
-              >
-                Map
+                Recommend
               </Link>
             </div>
 

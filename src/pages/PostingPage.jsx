@@ -17,9 +17,25 @@ const PostingPage = () => {
     tags: ''
   })
 
+  const [currentBook, setCurrentBook] = useState(book)
+
   useEffect(() => {
-    // 책 정보가 없으면 마이라이브러리로 리다이렉트
-    if (!book) {
+    // 책 정보가 없으면 localStorage에서 완독 책 찾기 (테스트용)
+    if (!currentBook) {
+      try {
+        const savedBooks = localStorage.getItem('myLibraryBooks')
+        if (savedBooks) {
+          const allBooks = JSON.parse(savedBooks)
+          const completedBook = allBooks.find(b => b.status === 'completed')
+          if (completedBook) {
+            setCurrentBook(completedBook)
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load books:', error)
+      }
+      // 완독 책도 없으면 마이라이브러리로 리다이렉트
       navigate('/mylibrary')
       return
     }
@@ -33,9 +49,9 @@ const PostingPage = () => {
         tags: editingPosting.tags ? editingPosting.tags.join(', ') : ''
       })
     }
-  }, [book, navigate, isEditing, editingPosting])
+  }, [currentBook, navigate, isEditing, editingPosting])
 
-  if (!book) {
+  if (!currentBook) {
     return null
   }
 
@@ -62,6 +78,15 @@ const PostingPage = () => {
         })
         localStorage.setItem('bookPostings', JSON.stringify(updatedPostings))
 
+        // storage 이벤트 발생시켜서 다른 컴포넌트에서 업데이트되도록 함
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'bookPostings',
+          newValue: JSON.stringify(updatedPostings),
+          storageArea: localStorage
+        }))
+        // 같은 탭에서도 업데이트되도록 커스텀 이벤트 발생
+        window.dispatchEvent(new Event('bookPostingsUpdated'))
+
         // 완료 후 커뮤니티 페이지로 이동
         navigate('/community', {
           state: {
@@ -71,28 +96,48 @@ const PostingPage = () => {
           }
         })
       } else {
+        // user가 없을 때를 위한 임시 사용자 ID 생성/가져오기
+        let currentUserId = user?.id
+        if (!currentUserId) {
+          let tempUserId = localStorage.getItem('tempUserId')
+          if (!tempUserId) {
+            tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            localStorage.setItem('tempUserId', tempUserId)
+          }
+          currentUserId = tempUserId
+        }
+
         // 새 포스팅 작성
         const posting = {
           id: Date.now(),
-          authorId: user?.id || null,
-          userId: user?.id || null,
+          authorId: currentUserId,
+          userId: currentUserId,
           authorName: user?.name || user?.email?.split('@')[0] || '익명',
           userName: user?.name || user?.email?.split('@')[0] || '익명',
           userEmail: user?.email || '',
-          bookId: book.id,
-          bookTitle: book.title,
-          bookAuthor: book.author,
-          bookThumbnail: book.thumbnail || '',
-          title: formData.title || `${book.title} 독후감`,
+          bookId: currentBook.id,
+          bookTitle: currentBook.title,
+          bookAuthor: currentBook.author,
+          bookThumbnail: currentBook.thumbnail || '',
+          title: formData.title || `${currentBook.title} 독후감`,
           content: formData.content,
           rating: formData.rating,
           tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
           createdAt: new Date().toISOString(),
-          completedDate: book.completedDate
+          completedDate: currentBook.completedDate
         }
 
         existingPostings.push(posting)
         localStorage.setItem('bookPostings', JSON.stringify(existingPostings))
+
+        // storage 이벤트 발생시켜서 다른 컴포넌트에서 업데이트되도록 함
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'bookPostings',
+          newValue: JSON.stringify(existingPostings),
+          storageArea: localStorage
+        }))
+        // 같은 탭에서도 업데이트되도록 커스텀 이벤트 발생
+        window.dispatchEvent(new Event('bookPostingsUpdated'))
 
         // 완료 후 커뮤니티 페이지로 이동
         navigate('/community', {
@@ -109,7 +154,7 @@ const PostingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-200 to-gray-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -123,10 +168,10 @@ const PostingPage = () => {
             뒤로가기
           </button>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {isEditing ? '독서 포스팅 수정' : '독서 포스팅 작성'}
+            {isEditing ? 'Edit Posting' : 'Write a Posting'}
           </h1>
           <p className="text-gray-600">
-            {isEditing ? '포스팅을 수정해보세요' : '완독한 책에 대한 생각을 공유해보세요'}
+            {isEditing ? 'Edit your posting' : 'Share your thoughts about a completed book'}
           </p>
         </div>
 
@@ -134,16 +179,16 @@ const PostingPage = () => {
         <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 mb-8">
           <div className="flex items-start gap-4">
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{book.title}</h2>
-              <p className="text-gray-600 mb-4">{book.author}</p>
-              {book.completedDate && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{currentBook.title}</h2>
+              <p className="text-gray-600 mb-4">{currentBook.author}</p>
+              {currentBook.completedDate && (
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <span>완독일:</span>
-                  <span className="font-semibold">{book.completedDate}</span>
+                  <span className="font-semibold">{currentBook.completedDate}</span>
                 </div>
               )}
             </div>
-            <div className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold">
+            <div className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-bold">
               완독
             </div>
           </div>
@@ -161,16 +206,16 @@ const PostingPage = () => {
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder={`${book.title} 독후감`}
+                placeholder={`${currentBook.title} POSTING`}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
               />
-              <p className="text-xs text-gray-400 mt-1">제목을 입력하지 않으면 기본 제목이 사용됩니다.</p>
+              <p className="text-xs text-gray-400 mt-1">If you don't enter a title, the default title will be used.</p>
             </div>
 
             {/* Rating */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                평점
+                Rating
               </label>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -178,7 +223,7 @@ const PostingPage = () => {
                     key={star}
                     type="button"
                     onClick={() => setFormData({ ...formData, rating: star })}
-                    className={`text-3xl transition-transform hover:scale-110 ${star <= formData.rating ? 'text-yellow-400' : 'text-gray-200'
+                    className={`text-3xl transition-transform hover:scale-110 ${star <= formData.rating ? 'text-yellow-500' : 'text-gray-200'
                       }`}
                   >
                     ★
@@ -209,7 +254,7 @@ const PostingPage = () => {
             {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                태그 <span className="text-gray-400">(선택)</span>
+                Tags <span className="text-gray-400">(Optional)</span>
               </label>
               <input
                 type="text"
@@ -228,14 +273,14 @@ const PostingPage = () => {
                 onClick={() => navigate('/mylibrary')}
                 className="flex-1 px-6 py-3 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium text-sm"
               >
-                취소
+                Cancel
               </button>
               <button
                 type="submit"
                 disabled={!formData.content.trim()}
                 className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
               >
-                {isEditing ? '포스팅 수정하기' : '포스팅 작성하기'}
+                {isEditing ? 'Edit Posting' : 'Write a Posting'}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@
 
 const DATA4LIBRARY_API_KEY = import.meta.env.VITE_DATA4LIBRARY_API_KEY
 // 개발 환경에서는 프록시 사용, 프로덕션에서는 직접 호출
+// API 엔드포인트 (정보나루 OpenAPI 스펙에 맞춤)
 const DATA4LIBRARY_API_URL = import.meta.env.DEV
   ? '/api/data4library/libSrchByBook'
   : 'http://data4library.kr/api/libSrchByBook'
@@ -18,10 +19,11 @@ const hasValidApiKey = () => {
 
 /**
  * ISBN으로 도서를 보유한 도서관 검색
- * @param {string} isbn - ISBN 번호 (13자리 권장)
+ * @param {string} isbn - ISBN 번호 (13자리 또는 10자리)
+ * @param {string} region - 지역코드 (선택사항, 예: "11" 서울)
  * @returns {Promise<Array>} 도서관 정보 배열
  */
-export const searchLibrariesByBook = async (isbn) => {
+export const searchLibrariesByBook = async (isbn, region = null) => {
   try {
     if (!isbn) {
       throw new Error('ISBN이 필요합니다.')
@@ -30,10 +32,19 @@ export const searchLibrariesByBook = async (isbn) => {
     // ISBN에서 하이픈 제거
     const cleanISBN = isbn.replace(/-/g, '')
 
-    // API 키가 있으면 사용, 없으면 공개 API로 시도
-    const url = hasValidApiKey()
-      ? `${DATA4LIBRARY_API_URL}?authKey=${DATA4LIBRARY_API_KEY}&isbn13=${cleanISBN}&format=json`
-      : `${DATA4LIBRARY_API_URL}?isbn13=${cleanISBN}&format=json`
+    // API URL 구성 (이미지의 API 스펙에 맞춤)
+    let url = `${DATA4LIBRARY_API_URL}?`
+    
+    if (hasValidApiKey()) {
+      url += `authKey=${DATA4LIBRARY_API_KEY}&`
+    }
+    
+    url += `isbn=${cleanISBN}`
+    
+    // 지역코드가 있으면 추가
+    if (region) {
+      url += `&region=${region}`
+    }
 
     const response = await fetch(url)
 
@@ -66,15 +77,21 @@ export const searchLibrariesByBook = async (isbn) => {
 
       return libraries.map(lib => ({
         libCode: lib.libCode || '',
-        libName: lib.libName || '',
-        address: lib.address || '',
-        tel: lib.tel || '',
-        homepage: lib.homepage || '',
-        closed: lib.closed || '',
-        operatingTime: lib.operatingTime || '',
-        latitude: lib.latitude ? parseFloat(lib.latitude) : null,
-        longitude: lib.longitude ? parseFloat(lib.longitude) : null,
+        libName: lib.libName ? lib.libName.trim() : '',
+        address: lib.address ? lib.address.trim() : '',
+        tel: lib.tel ? lib.tel.trim() : '',
+        fax: lib.fax ? lib.fax.trim() : '',
+        homepage: lib.homepage ? lib.homepage.trim() : '',
+        closed: lib.closed ? lib.closed.trim() : '',
+        operatingTime: lib.operatingTime ? lib.operatingTime.trim() : '',
+        latitude: lib.latitude ? parseFloat(lib.latitude.trim()) : null,
+        longitude: lib.longitude ? parseFloat(lib.longitude.trim()) : null,
       }))
+    }
+
+    // XML 파싱 결과가 직접 배열인 경우
+    if (Array.isArray(data)) {
+      return data
     }
 
     return []
@@ -106,16 +123,22 @@ const parseXMLResponse = (xmlText) => {
     const libraries = []
 
     libs.forEach(lib => {
+      const getTextContent = (selector) => {
+        const element = lib.querySelector(selector)
+        return element ? element.textContent.trim() : ''
+      }
+
       libraries.push({
-        libCode: lib.querySelector('libCode')?.textContent || '',
-        libName: lib.querySelector('libName')?.textContent || '',
-        address: lib.querySelector('address')?.textContent || '',
-        tel: lib.querySelector('tel')?.textContent || '',
-        homepage: lib.querySelector('homepage')?.textContent || '',
-        closed: lib.querySelector('closed')?.textContent || '',
-        operatingTime: lib.querySelector('operatingTime')?.textContent || '',
-        latitude: lib.querySelector('latitude')?.textContent ? parseFloat(lib.querySelector('latitude').textContent) : null,
-        longitude: lib.querySelector('longitude')?.textContent ? parseFloat(lib.querySelector('longitude').textContent) : null,
+        libCode: getTextContent('libCode'),
+        libName: getTextContent('libName'),
+        address: getTextContent('address'),
+        tel: getTextContent('tel'),
+        fax: getTextContent('fax'),
+        homepage: getTextContent('homepage'),
+        closed: getTextContent('closed'),
+        operatingTime: getTextContent('operatingTime'),
+        latitude: getTextContent('latitude') ? parseFloat(getTextContent('latitude')) : null,
+        longitude: getTextContent('longitude') ? parseFloat(getTextContent('longitude')) : null,
       })
     })
 

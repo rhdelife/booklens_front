@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import TextPressure from '../components/TextPressure'
-import { getBestsellers, getNewReleases } from '../lib/googleBooksApi'
 import { useAuth } from '../contexts/AuthContext'
 import { authAPI } from '../services/api'
+import ReadingStartModal from '../components/ReadingStartModal'
+import ReadingEndModal from '../components/ReadingEndModal'
+import Toast from '../components/Toast'
 
 const HomePage = () => {
-  const [currentBanner, setCurrentBanner] = useState(0)
-  const [bestsellers, setBestsellers] = useState([])
-  const [newReleases, setNewReleases] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { setOAuthUser, isAuthenticated } = useAuth()
+  
+  // 현재 읽고 있는 책들
+  const [readingBooks, setReadingBooks] = useState([])
+  const [readingSession, setReadingSession] = useState(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [showStartModal, setShowStartModal] = useState(false)
+  const [showEndModal, setShowEndModal] = useState(false)
+  const [selectedBookId, setSelectedBookId] = useState(null)
+  const [toastMessage, setToastMessage] = useState('')
 
   // OAuth 콜백 처리 (백엔드가 홈 페이지로 리다이렉트한 경우)
   useEffect(() => {
@@ -41,46 +47,178 @@ const HomePage = () => {
     }
   }, [searchParams, setSearchParams, setOAuthUser, isAuthenticated])
 
+  // localStorage에서 읽는 중인 책들 로드
   useEffect(() => {
-    const loadBooks = async () => {
-      setIsLoading(true)
+    const loadReadingBooks = () => {
       try {
-        const [bestsellerData, newReleaseData] = await Promise.all([
-          getBestsellers(6),
-          getNewReleases(4)
-        ])
-        setBestsellers(bestsellerData || [])
-        setNewReleases(newReleaseData || [])
+        const savedBooks = localStorage.getItem('myLibraryBooks')
+        if (savedBooks) {
+          const allBooks = JSON.parse(savedBooks)
+          const reading = allBooks.filter(book => book.status === 'reading')
+          setReadingBooks(reading)
+        }
       } catch (error) {
-        console.error('책 데이터 로드 오류:', error)
-        // 에러 발생 시 빈 배열 유지
-        setBestsellers([])
-        setNewReleases([])
-      } finally {
-        setIsLoading(false)
+        console.error('Failed to load reading books:', error)
       }
     }
 
-    loadBooks()
+    loadReadingBooks()
+
+    // storage 이벤트 리스너 추가 (다른 탭에서 변경 시 업데이트)
+    const handleStorageChange = (e) => {
+      if (e.key === 'myLibraryBooks') {
+        loadReadingBooks()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
-  const banners = [
-    {
-      type: 'brand',
-      title: 'BookLens',
-      subtitle: '당신의 다음 책을 찾아보세요',
-    },
-    {
-      type: 'promo',
-      title: '신규 회원 30일 무료',
-      subtitle: '지금 가입하고 모든 책을 무제한으로 읽어보세요',
-    },
-    {
-      type: 'feature',
-      title: 'AI 추천 서비스',
-      subtitle: '당신의 취향에 맞는 책을 추천해드립니다',
-    },
-  ]
+  // 독서 세션 로드
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem('readingSession')
+      if (savedSession) {
+        const session = JSON.parse(savedSession)
+        if (session.startTime) {
+          session.startTime = new Date(session.startTime)
+          const now = new Date()
+          const hoursSinceStart = (now - session.startTime) / (1000 * 60 * 60)
+          if (hoursSinceStart < 24) {
+            setReadingSession(session)
+          } else {
+            localStorage.removeItem('readingSession')
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load reading session:', error)
+    }
+  }, [])
+
+  // 독서 세션 저장
+  useEffect(() => {
+    if (readingSession) {
+      try {
+        localStorage.setItem('readingSession', JSON.stringify(readingSession))
+      } catch (error) {
+        console.error('Failed to save reading session:', error)
+      }
+    } else {
+      localStorage.removeItem('readingSession')
+    }
+  }, [readingSession])
+
+  // 실시간 타이머 업데이트
+  useEffect(() => {
+    if (readingSession) {
+      const interval = setInterval(() => {
+        setCurrentTime(new Date())
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [readingSession])
+
+  // 시간 형식 변환 함수
+  const formatTime = (totalSeconds) => {
+    if (!totalSeconds || totalSeconds === 0) return '0m'
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`
+    } else {
+      return `${minutes}m`
+    }
+  }
+
+  // 현재 세션 경과 시간 계산
+  const getCurrentSessionTime = () => {
+    if (!readingSession) return 0
+    const elapsed = Math.floor((currentTime - readingSession.startTime) / 1000)
+    return elapsed
+  }
+
+  // 독서 시작
+  const handleStartReading = (bookId) => {
+    setSelectedBookId(bookId)
+    setShowStartModal(true)
+  }
+
+  const confirmStartReading = () => {
+    if (selectedBookId) {
+      setReadingSession({
+        bookId: selectedBookId,
+        startTime: new Date()
+      })
+      setShowStartModal(false)
+      setToastMessage('독서를 시작했습니다.')
+      setTimeout(() => setToastMessage(''), 3000)
+    }
+  }
+
+  // 독서 종료
+  const handleStopReading = (bookId) => {
+    setSelectedBookId(bookId)
+    setShowEndModal(true)
+  }
+
+  const confirmStopReading = (pagesRead) => {
+    if (!selectedBookId || !readingSession) return
+
+    const book = readingBooks.find(b => b.id === selectedBookId)
+    if (!book) return
+
+    // 세션 시간 계산
+    const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
+
+    // localStorage에서 모든 책 로드
+    try {
+      const savedBooks = localStorage.getItem('myLibraryBooks')
+      if (savedBooks) {
+        const allBooks = JSON.parse(savedBooks)
+        
+        // 진행률 업데이트
+        const newReadPage = pagesRead
+        const newProgress = book.totalPage > 0
+          ? Math.min(100, Math.round((newReadPage / book.totalPage) * 100))
+          : 0
+
+        // 책 정보 업데이트
+        const updatedBooks = allBooks.map(b => {
+          if (b.id === selectedBookId) {
+            return {
+              ...b,
+              readPage: newReadPage,
+              progress: newProgress,
+              totalReadingTime: (b.totalReadingTime || 0) + sessionDuration,
+              status: newProgress === 100 ? 'completed' : b.status,
+              completedDate: newProgress === 100 && b.status !== 'completed'
+                ? new Date().toISOString().split('T')[0]
+                : b.completedDate
+            }
+          }
+          return b
+        })
+
+        localStorage.setItem('myLibraryBooks', JSON.stringify(updatedBooks))
+        
+        // 읽는 중인 책 목록 업데이트
+        const reading = updatedBooks.filter(book => book.status === 'reading')
+        setReadingBooks(reading)
+      }
+    } catch (error) {
+      console.error('Failed to update book:', error)
+    }
+
+    // 세션 종료
+    setReadingSession(null)
+    setShowEndModal(false)
+    setSelectedBookId(null)
+    setToastMessage('독서가 종료되었습니다.')
+    setTimeout(() => setToastMessage(''), 3000)
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -112,126 +250,133 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Bestseller Section */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="mb-16">
-          <h2 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">베스트셀러</h2>
-          <p className="text-gray-500 text-[15px]">지금 가장 많이 읽히는 책들</p>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-900"></div>
+      {/* Currently Reading Section */}
+      {readingBooks.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 py-20">
+          <div className="mb-16">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">현재 읽고 있는 책</h2>
+            <p className="text-gray-500 text-[15px]">독서를 계속하거나 새로 시작해보세요</p>
           </div>
-        ) : bestsellers.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {bestsellers.map((book, index) => (
-              <Link
-                key={book.id}
-                to={`/book/${book.id}`}
-                className="group"
-              >
-                <div className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                  {book.thumbnail ? (
-                    <div className="w-full aspect-[2/3] mb-3 rounded-lg overflow-hidden bg-gray-50">
-                      <img
-                        src={book.thumbnail}
-                        alt={book.title}
-                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.style.display = 'none'
-                          e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">📚</div>'
-                        }}
-                      />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {readingBooks.map((book) => {
+              const isReading = readingSession && readingSession.bookId === book.id
+              const currentSessionTime = isReading ? getCurrentSessionTime() : 0
+              const totalTime = (book.totalReadingTime || 0) + currentSessionTime
+              const progressPercentage = book.totalPage > 0
+                ? Math.round(((book.readPage || 0) / book.totalPage) * 100)
+                : book.progress
+
+              return (
+                <div
+                  key={book.id}
+                  className={`bg-white rounded-2xl p-6 border border-gray-100 hover:border-gray-200 transition-all duration-200 ${
+                    book.status === 'reading' && !isReading ? 'cursor-pointer' : ''
+                  }`}
+                  onClick={() => {
+                    if (book.status === 'reading' && !isReading) {
+                      handleStartReading(book.id)
+                    }
+                  }}
+                >
+                  <div className="flex gap-4">
+                    {/* Book Cover */}
+                    <div className="flex-shrink-0">
+                      <div className="w-24 h-36 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                        {book.thumbnail ? (
+                          <img
+                            src={book.thumbnail}
+                            alt={book.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-3xl">
+                            📚
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="w-full aspect-[2/3] mb-3 rounded-lg bg-gray-50 flex items-center justify-center text-4xl">📚</div>
-                  )}
-                  <div>
-                    <div className="text-xs text-gray-400 mb-1.5 font-medium">#{index + 1}</div>
-                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 text-[13px] leading-snug">
-                      {book.title}
-                    </h3>
-                    <p className="text-gray-500 text-[12px] line-clamp-1">{book.author}</p>
+
+                    {/* Book Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                        {book.title}
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-3">{book.author}</p>
+
+                      {/* Progress Bar */}
+                      {book.totalPage > 0 && (
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">
+                              {progressPercentage}%
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {book.readPage || 0} / {book.totalPage} 페이지
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-1.5">
+                            <div
+                              className="bg-gray-900 h-1.5 rounded-full transition-all duration-300"
+                              style={{ width: `${progressPercentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reading Time */}
+                      {totalTime > 0 && (
+                        <p className="text-xs text-gray-500 mb-3">
+                          독서 시간: <span className="font-semibold text-gray-900">{formatTime(totalTime)}</span>
+                          {isReading && (
+                            <span className="ml-2 text-gray-400">
+                              (진행 중: {formatTime(currentSessionTime)})
+                            </span>
+                          )}
+                        </p>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex gap-2 mt-4">
+                        {isReading ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleStopReading(book.id)
+                            }}
+                            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
+                          >
+                            읽기 종료
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleStartReading(book.id)
+                            }}
+                            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
+                          >
+                            읽기 시작
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/book/${book.id}`)
+                          }}
+                          className="px-4 py-2 bg-white text-gray-700 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all duration-200 font-medium text-sm"
+                        >
+                          상세보기
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </Link>
-            ))}
+              )
+            })}
           </div>
-        ) : (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-sm">책 데이터를 불러올 수 없습니다.</p>
-          </div>
-        )}
-      </section>
-
-      {/* CTA Section */}
-      <section className="max-w-6xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-          <h3 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">독서를 시작해보세요</h3>
-          <p className="text-gray-600 mb-8 text-[15px]">
-            첫 책을 추가하고 독서 여정을 기록하세요
-          </p>
-          <Link
-            to="/signup"
-            className="inline-block bg-gray-900 text-white px-8 py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
-          >
-            가입하기
-          </Link>
-        </div>
-      </section>
-
-      {/* New Releases Section */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="mb-16">
-          <h2 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">신간 도서</h2>
-          <p className="text-gray-500 text-[15px]">새롭게 출간된 책들을 만나보세요</p>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-900"></div>
-          </div>
-        ) : newReleases.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {newReleases.map((book) => (
-              <Link
-                key={book.id}
-                to={`/book/${book.id}`}
-                className="group"
-              >
-                <div className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                  {book.thumbnail ? (
-                    <div className="w-full aspect-[2/3] mb-3 rounded-lg overflow-hidden bg-gray-50">
-                      <img
-                        src={book.thumbnail}
-                        alt={book.title}
-                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.style.display = 'none'
-                          e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">📚</div>'
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full aspect-[2/3] mb-3 rounded-lg bg-gray-50 flex items-center justify-center text-4xl">📚</div>
-                  )}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 text-[13px] leading-snug">
-                      {book.title}
-                    </h3>
-                    <p className="text-gray-500 text-[12px] line-clamp-1">{book.author}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-sm">신간 도서를 불러올 수 없습니다.</p>
-          </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-gray-100 mt-32">
@@ -273,6 +418,30 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Modals */}
+      <ReadingStartModal
+        isOpen={showStartModal}
+        onClose={() => {
+          setShowStartModal(false)
+          setSelectedBookId(null)
+        }}
+        onConfirm={confirmStartReading}
+      />
+
+      <ReadingEndModal
+        isOpen={showEndModal}
+        onClose={() => {
+          setShowEndModal(false)
+          setSelectedBookId(null)
+        }}
+        onConfirm={confirmStopReading}
+        totalPages={readingBooks.find(b => b.id === selectedBookId)?.totalPage || 0}
+        currentPage={readingBooks.find(b => b.id === selectedBookId)?.readPage || 0}
+      />
+
+      {/* Toast */}
+      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
     </div>
   )
 }

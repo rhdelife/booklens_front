@@ -5,8 +5,10 @@ import ReadingStartModal from '../components/ReadingStartModal'
 import ReadingEndModal from '../components/ReadingEndModal'
 import PostingConfirmModal from '../components/PostingConfirmModal'
 import Toast from '../components/Toast'
+import ReadingPersonaBadge from '../components/ReadingPersonaBadge'
 import { searchBookByISBN, searchBooks } from '../lib/googleBooksApi'
 import { validateRequired, validateLength, validateNumberRange, validateISBN } from '../utils/validation'
+import { getOrCalculatePersona, recalculatePersona } from '../utils/readingPersona'
 
 const MyLibraryPage = () => {
   const navigate = useNavigate()
@@ -28,6 +30,7 @@ const MyLibraryPage = () => {
   }
 
   const [books, setBooks] = useState(loadBooksFromStorage)
+  const [persona, setPersona] = useState(null)
 
   // 독서 세션 관리
   const [readingSession, setReadingSession] = useState(null) // { bookId, startTime }
@@ -94,6 +97,13 @@ const MyLibraryPage = () => {
     }
   }, [books])
 
+  // 페르소나 계산 및 업데이트
+  useEffect(() => {
+    const userId = user?.id || localStorage.getItem('tempUserId') || 'anonymous'
+    const calculatedPersona = getOrCalculatePersona(books, userId)
+    setPersona(calculatedPersona)
+  }, [books, user])
+
   // 독서 세션이 변경될 때마다 localStorage에 저장
   useEffect(() => {
     if (readingSession) {
@@ -140,19 +150,25 @@ const MyLibraryPage = () => {
   // 내 포스팅 개수 계산
   useEffect(() => {
     const loadMyPostings = () => {
-      if (!user) {
-        setMyPostingsCount(0)
-        return
-      }
-
       try {
         const savedPostings = localStorage.getItem('bookPostings')
         if (savedPostings) {
           const allPostings = JSON.parse(savedPostings)
-          const myPostings = allPostings.filter(
-            posting => posting.authorId === user.id || posting.userId === user.id
-          )
-          setMyPostingsCount(myPostings.length)
+          
+          // user가 있으면 user.id로 필터링, 없으면 tempUserId로 필터링
+          let userId = user?.id
+          if (!userId) {
+            userId = localStorage.getItem('tempUserId')
+          }
+          
+          if (userId) {
+            const myPostings = allPostings.filter(
+              posting => posting.authorId === userId || posting.userId === userId
+            )
+            setMyPostingsCount(myPostings.length)
+          } else {
+            setMyPostingsCount(0)
+          }
         } else {
           setMyPostingsCount(0)
         }
@@ -171,8 +187,17 @@ const MyLibraryPage = () => {
       }
     }
 
+    // 같은 탭에서의 변경도 감지하기 위해 커스텀 이벤트도 리스닝
+    const handleCustomStorageChange = () => {
+      loadMyPostings()
+    }
+
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    window.addEventListener('bookPostingsUpdated', handleCustomStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('bookPostingsUpdated', handleCustomStorageChange)
+    }
   }, [user])
 
   // Calculate statistics
@@ -441,7 +466,10 @@ const MyLibraryPage = () => {
         {/* Header */}
         <div className="flex justify-between items-start mb-12">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">마이라이브러리</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">마이라이브러리</h1>
+              {persona && <ReadingPersonaBadge persona={persona} size="md" />}
+            </div>
             <p className="text-gray-500 text-[15px]">나만의 독서 기록을 관리하고 추적하세요</p>
           </div>
           <button

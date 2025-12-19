@@ -366,6 +366,8 @@ const MapPage = () => {
           <div style="font-weight:bold;font-size:16px;margin-bottom:6px;color:#1f2937;">${location.name}</div>
           <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">${location.address || '주소 정보 없음'}</div>
           ${location.tel ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">📞 ${location.tel}</div>` : ''}
+          ${location.fax ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">📠 ${location.fax}</div>` : ''}
+          ${location.homepage ? `<div style="font-size:11px;color:#3b82f6;margin-bottom:4px;"><a href="${location.homepage}" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">🌐 홈페이지</a></div>` : ''}
           ${location.operatingTime ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">🕐 ${location.operatingTime}</div>` : ''}
           ${location.closed ? `<div style="font-size:11px;color:#ef4444;margin-bottom:4px;">🚫 휴관일: ${location.closed}</div>` : ''}
           <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;padding:4px 8px;background:#f3f4f6;border-radius:4px;display:inline-block;">
@@ -533,6 +535,7 @@ const MapPage = () => {
                 lng: lng,
                 address: lib.address || '',
                 tel: lib.tel || '',
+                fax: lib.fax || '',
                 homepage: lib.homepage || '',
                 closed: lib.closed || '',
                 operatingTime: lib.operatingTime || '',
@@ -888,6 +891,16 @@ const MapPage = () => {
                               <p className="text-sm text-gray-600">{location.address || '주소 정보 없음'}</p>
                               {location.tel && (
                                 <p className="text-xs text-gray-500 mt-1">📞 {location.tel}</p>
+                              )}
+                              {location.fax && (
+                                <p className="text-xs text-gray-500 mt-1">📠 {location.fax}</p>
+                              )}
+                              {location.homepage && (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  <a href={location.homepage} target="_blank" rel="noopener noreferrer" className="underline">
+                                    🌐 홈페이지
+                                  </a>
+                                </p>
                               )}
                               {location.operatingTime && (
                                 <p className="text-xs text-gray-500 mt-1">🕐 {location.operatingTime}</p>

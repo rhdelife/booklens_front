@@ -83,4 +83,19 @@
   .focusflight-button-secondary {
     @apply bg-white text-gray-900 rounded-xl px-6 py-3 font-medium border border-gray-200 transition-all duration-200 hover:bg-gray-50 active:scale-[0.98];
   }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

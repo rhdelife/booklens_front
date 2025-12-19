@@ -283,6 +283,25 @@ export const commentAPI = {
   },
 }
 
+/**
+ * AI 추천 관련 API
+ */
+export const aiAPI = {
+  /**
+   * AI 도서 추천 요청
+   * @param {Object} payload - 추천 요청 페이로드
+   * @param {'isbn'|'title'} payload.inputType
+   * @param {string} payload.query
+   * @param {{recentBooks?: Array, preferredGenres?: string[], readingGoal?: string}} payload.userContext
+   */
+  getRecommendations: async (payload) => {
+    return apiRequest('/ai/recommendations', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  },
+}
+
 export default {
   authAPI,
   bookAPI,
@@ -290,6 +309,7 @@ export default {
   postingAPI,
   likeAPI,
   commentAPI,
+  aiAPI,
 }
 
 
