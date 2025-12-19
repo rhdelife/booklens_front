@@ -6,7 +6,7 @@ import {
   validatePassword,
   validatePasswordConfirm,
 } from '../utils/validation'
-import { startGoogleLogin, startNaverLogin } from '../services/oauth'
+import { startGoogleLogin } from '../services/oauth'
 
 const SignupPage = () => {
   const [email, setEmail] = useState('')
@@ -245,16 +245,6 @@ const SignupPage = () => {
                 Google로 가입하기
               </button>
 
-              <button
-                type="button"
-                onClick={startNaverLogin}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200 text-sm"
-              >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="#03C75A">
-                  <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845Z" />
-                </svg>
-                Naver로 가입하기
-              </button>
             </div>
           </div>
 
