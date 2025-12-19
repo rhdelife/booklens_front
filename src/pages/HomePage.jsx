@@ -56,24 +56,20 @@ const HomePage = () => {
   // 백엔드 API에서 읽는 중인 책들 로드
   useEffect(() => {
     const loadReadingBooks = async () => {
+      if (!isAuthenticated) return
+      
       try {
         // 백엔드 API에서 책 목록 가져오기
         const allBooks = await bookAPI.getMyBooks()
+        // 백엔드 API는 id 필드를 사용하므로 그대로 사용
         const reading = allBooks.filter(book => book.status === 'reading')
         setReadingBooks(reading)
+        // localStorage도 업데이트 (다른 컴포넌트와의 호환성을 위해)
+        localStorage.setItem('myLibraryBooks', JSON.stringify(allBooks))
       } catch (error) {
         console.error('Failed to load reading books from API:', error)
-        // 폴백: localStorage 사용
-        try {
-          const savedBooks = localStorage.getItem('myLibraryBooks')
-          if (savedBooks) {
-            const allBooks = JSON.parse(savedBooks)
-            const reading = allBooks.filter(book => book.status === 'reading')
-            setReadingBooks(reading)
-          }
-        } catch (localError) {
-          console.error('Failed to load reading books from localStorage:', localError)
-        }
+        // API 실패 시 빈 배열로 설정 (잘못된 ID 사용 방지)
+        setReadingBooks([])
       }
     }
 
