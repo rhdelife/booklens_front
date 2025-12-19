@@ -61,11 +61,20 @@ const HomePage = () => {
       try {
         // 백엔드 API에서 책 목록 가져오기
         const allBooks = await bookAPI.getMyBooks()
-        // 백엔드 API는 id 필드를 사용하므로 그대로 사용
-        const reading = allBooks.filter(book => book.status === 'reading')
+        // 백엔드 API 응답 필드명을 프론트엔드 형식으로 변환 (snake_case -> camelCase)
+        const transformedBooks = allBooks.map(book => ({
+          ...book,
+          totalPage: book.total_page ?? book.totalPage,
+          readPage: book.read_page ?? book.readPage,
+          totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+          startDate: book.start_date ?? book.startDate,
+          completedDate: book.completed_date ?? book.completedDate,
+          publishDate: book.publish_date ?? book.publishDate,
+        }))
+        const reading = transformedBooks.filter(book => book.status === 'reading')
         setReadingBooks(reading)
         // localStorage도 업데이트 (다른 컴포넌트와의 호환성을 위해)
-        localStorage.setItem('myLibraryBooks', JSON.stringify(allBooks))
+        localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
       } catch (error) {
         console.error('Failed to load reading books from API:', error)
         // API 실패 시 빈 배열로 설정 (잘못된 ID 사용 방지)
@@ -181,14 +190,26 @@ const HomePage = () => {
     if (!selectedBookId || !readingSession) return
 
     const book = readingBooks.find(b => b.id === selectedBookId)
-    if (!book) return
+    if (!book) {
+      console.error('Book not found for selectedBookId:', selectedBookId)
+      return
+    }
+
+    // book.id가 유효한 숫자인지 확인 (타임스탬프 등 잘못된 값 방지)
+    const bookId = Number(book.id)
+    if (isNaN(bookId) || bookId <= 0 || bookId > 2147483647) {
+      console.error('Invalid book.id:', book.id, 'type:', typeof book.id, 'book:', book)
+      setToastMessage('유효하지 않은 책 ID입니다. 페이지를 새로고침해주세요.')
+      setShowEndModal(false)
+      return
+    }
 
     // 세션 시간 계산
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
 
     // 날짜별 독서 기록 저장 (백엔드)
     await saveReadingSession(
-      book.id,
+      bookId,
       book.title,
       book.author,
       book.thumbnail || '',
@@ -200,11 +221,21 @@ const HomePage = () => {
     // 백엔드에서 책 목록 다시 로드 (진행률은 백엔드에서 자동 업데이트됨)
     try {
       const allBooks = await bookAPI.getMyBooks()
-      const reading = allBooks.filter(b => b.status === 'reading')
+      // 필드명 변환
+      const transformedBooks = allBooks.map(book => ({
+        ...book,
+        totalPage: book.total_page ?? book.totalPage,
+        readPage: book.read_page ?? book.readPage,
+        totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+        startDate: book.start_date ?? book.startDate,
+        completedDate: book.completed_date ?? book.completedDate,
+        publishDate: book.publish_date ?? book.publishDate,
+      }))
+      const reading = transformedBooks.filter(b => b.status === 'reading')
       setReadingBooks(reading)
       
       // localStorage도 업데이트 (폴백용)
-      localStorage.setItem('myLibraryBooks', JSON.stringify(allBooks))
+      localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
       }
     } catch (error) {
       console.error('Failed to update book:', error)

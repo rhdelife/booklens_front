@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { bookAPI } from '../services/api'
 import ReadingStartModal from '../components/ReadingStartModal'
 import ReadingEndModal from '../components/ReadingEndModal'
 import PostingConfirmModal from '../components/PostingConfirmModal'
@@ -17,20 +18,8 @@ const MyLibraryPage = () => {
   const [showAddForm, setShowAddForm] = useState(false)
   const [myPostingsCount, setMyPostingsCount] = useState(0)
 
-  // localStorage에서 초기 데이터 로드
-  const loadBooksFromStorage = () => {
-    try {
-      const savedBooks = localStorage.getItem('myLibraryBooks')
-      if (savedBooks) {
-        return JSON.parse(savedBooks)
-      }
-    } catch (error) {
-      console.error('Failed to load books from localStorage:', error)
-    }
-    return []
-  }
-
-  const [books, setBooks] = useState(loadBooksFromStorage)
+  const [books, setBooks] = useState([])
+  const [isLoadingBooks, setIsLoadingBooks] = useState(false)
   const [persona, setPersona] = useState(null)
 
   // 독서 세션 관리
@@ -89,14 +78,38 @@ const MyLibraryPage = () => {
     }
   }, [])
 
-  // 책 데이터가 변경될 때마다 localStorage에 저장
+  // 백엔드 API에서 책 목록 로드
   useEffect(() => {
-    try {
-      localStorage.setItem('myLibraryBooks', JSON.stringify(books))
-    } catch (error) {
-      console.error('Failed to save books to localStorage:', error)
+    const loadBooks = async () => {
+      if (!user) return // 인증되지 않은 경우 건너뛰기
+      
+      setIsLoadingBooks(true)
+      try {
+        const allBooks = await bookAPI.getMyBooks()
+        // 백엔드 API 응답 필드명을 프론트엔드 형식으로 변환 (snake_case -> camelCase)
+        const transformedBooks = allBooks.map(book => ({
+          ...book,
+          totalPage: book.total_page ?? book.totalPage,
+          readPage: book.read_page ?? book.readPage,
+          totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+          startDate: book.start_date ?? book.startDate,
+          completedDate: book.completed_date ?? book.completedDate,
+          publishDate: book.publish_date ?? book.publishDate,
+        }))
+        setBooks(transformedBooks)
+        // 캐시용으로 localStorage에 저장 (다른 컴포넌트 호환성)
+        localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
+      } catch (error) {
+        console.error('Failed to load books from API:', error)
+        // API 실패 시 빈 배열로 설정
+        setBooks([])
+      } finally {
+        setIsLoadingBooks(false)
+      }
     }
-  }, [books])
+
+    loadBooks()
+  }, [user])
 
   // 페르소나 계산 및 업데이트
   useEffect(() => {
@@ -214,7 +227,7 @@ const MyLibraryPage = () => {
     ? getCurrentSessionTime()
     : 0
 
-  const handleAddBook = (e) => {
+  const handleAddBook = async (e) => {
     e.preventDefault()
     setFormErrors({})
 
@@ -236,42 +249,60 @@ const MyLibraryPage = () => {
 
     const totalPage = parseInt(formData.totalPage, 10) || 0
 
-    const newBook = {
-      id: Date.now(),
-      title: formData.title,
-      author: formData.author,
-      memo: formData.memo || '',
-      progress: 0,
-      status: 'reading', // 기본 상태를 'reading'으로 설정
-      startDate: new Date().toISOString().split('T')[0],
-      completedDate: null,
-      totalPage: totalPage,
-      readPage: 0,
-      totalReadingTime: 0, // 초 단위
-      publisher: formData.publisher || '',
-      publishDate: formData.publishDate || '',
-      thumbnail: formData.thumbnail || '',
-      isbn: formData.isbn || ''
-    }
+    // 백엔드 API로 책 추가
+    try {
+      const bookData = {
+        title: formData.title,
+        author: formData.author,
+        memo: formData.memo || '',
+        status: 'reading',
+        start_date: new Date().toISOString().split('T')[0],
+        total_page: totalPage,
+        read_page: 0,
+        publisher: formData.publisher || '',
+        publish_date: formData.publishDate || '',
+        thumbnail: formData.thumbnail || '',
+        isbn: formData.isbn || ''
+      }
 
-    setBooks([...books, newBook])
-    setFormData({
-      title: '',
-      author: '',
-      memo: '',
-      totalPage: '',
-      isbn: '',
-      publisher: '',
-      publishDate: '',
-      thumbnail: ''
-    })
-    setBookSearchError('')
-    setSearchQuery('')
-    setSearchResults([])
-    setFormErrors({})
-    setShowAddForm(false)
-    setToastMessage('책이 추가되었습니다! 독서를 시작해보세요.')
-    setTimeout(() => setToastMessage(''), 3000)
+      await bookAPI.addBook(bookData)
+      // 백엔드에서 받은 책 목록 다시 로드
+      const allBooks = await bookAPI.getMyBooks()
+      // 필드명 변환
+      const transformedBooks = allBooks.map(book => ({
+        ...book,
+        totalPage: book.total_page ?? book.totalPage,
+        readPage: book.read_page ?? book.readPage,
+        totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+        startDate: book.start_date ?? book.startDate,
+        completedDate: book.completed_date ?? book.completedDate,
+        publishDate: book.publish_date ?? book.publishDate,
+      }))
+      setBooks(transformedBooks)
+      localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
+
+      setFormData({
+        title: '',
+        author: '',
+        memo: '',
+        totalPage: '',
+        isbn: '',
+        publisher: '',
+        publishDate: '',
+        thumbnail: ''
+      })
+      setBookSearchError('')
+      setSearchQuery('')
+      setSearchResults([])
+      setFormErrors({})
+      setShowAddForm(false)
+      setToastMessage('책이 추가되었습니다! 독서를 시작해보세요.')
+      setTimeout(() => setToastMessage(''), 3000)
+    } catch (error) {
+      console.error('Failed to add book:', error)
+      setToastMessage('책 추가에 실패했습니다.')
+      setTimeout(() => setToastMessage(''), 3000)
+    }
   }
 
   // 독서 시작
@@ -302,45 +333,53 @@ const MyLibraryPage = () => {
     if (!selectedBookId || !readingSession) return
 
     const book = books.find(b => b.id === selectedBookId)
-    if (!book) return
+    if (!book) {
+      console.error('Book not found for selectedBookId:', selectedBookId)
+      return
+    }
+
+    // book.id가 유효한 숫자인지 확인
+    const bookId = Number(book.id)
+    if (isNaN(bookId) || bookId <= 0 || bookId > 2147483647) {
+      console.error('Invalid book.id:', book.id, 'type:', typeof book.id)
+      setToastMessage('유효하지 않은 책 ID입니다. 페이지를 새로고침해주세요.')
+      setShowEndModal(false)
+      return
+    }
 
     // 세션 시간 계산
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
 
-    // 날짜별 독서 기록 저장 (백엔드)
-    await saveReadingSession(
-      book.id,
-      book.title,
-      book.author,
-      book.thumbnail || '',
-      pagesRead,
-      sessionDuration,
-      readingSession.startTime
-    )
+    // 날짜별 독서 기록 저장 (백엔드) - 진행률은 백엔드에서 자동 업데이트됨
+    try {
+      await saveReadingSession(
+        bookId,
+        book.title,
+        book.author,
+        book.thumbnail || '',
+        pagesRead,
+        sessionDuration,
+        readingSession.startTime
+      )
 
-    // 진행률 업데이트
-    const newReadPage = pagesRead
-    const newProgress = book.totalPage > 0
-      ? Math.min(100, Math.round((newReadPage / book.totalPage) * 100))
-      : 0
-
-    // 책 정보 업데이트
-    setBooks(books.map(b => {
-      if (b.id === selectedBookId) {
-        const updatedBook = {
-          ...b,
-          readPage: newReadPage,
-          progress: newProgress,
-          totalReadingTime: (b.totalReadingTime || 0) + sessionDuration,
-          status: newProgress === 100 ? 'completed' : b.status,
-          completedDate: newProgress === 100 && b.status !== 'completed'
-            ? new Date().toISOString().split('T')[0]
-            : b.completedDate
-        }
-        return updatedBook
-      }
-      return b
-    }))
+      // 백엔드에서 최신 책 목록 다시 로드
+      const allBooks = await bookAPI.getMyBooks()
+      // 필드명 변환
+      const transformedBooks = allBooks.map(book => ({
+        ...book,
+        totalPage: book.total_page ?? book.totalPage,
+        readPage: book.read_page ?? book.readPage,
+        totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+        startDate: book.start_date ?? book.startDate,
+        completedDate: book.completed_date ?? book.completedDate,
+        publishDate: book.publish_date ?? book.publishDate,
+      }))
+      setBooks(transformedBooks)
+      localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
+    } catch (error) {
+      console.error('Failed to save reading session:', error)
+      setToastMessage('독서 기록 저장에 실패했습니다.')
+    }
 
     // 세션 종료
     setReadingSession(null)
@@ -368,9 +407,21 @@ const MyLibraryPage = () => {
     }))
   }
 
-  const handleDeleteBook = (bookId) => {
+  const handleDeleteBook = async (bookId) => {
     if (window.confirm('정말 이 책을 삭제하시겠습니까?')) {
-      setBooks(books.filter(book => book.id !== bookId))
+      try {
+        await bookAPI.deleteBook(bookId)
+        // 백엔드에서 최신 책 목록 다시 로드
+        const allBooks = await bookAPI.getMyBooks()
+        setBooks(allBooks)
+        localStorage.setItem('myLibraryBooks', JSON.stringify(allBooks))
+        setToastMessage('책이 삭제되었습니다.')
+        setTimeout(() => setToastMessage(''), 3000)
+      } catch (error) {
+        console.error('Failed to delete book:', error)
+        setToastMessage('책 삭제에 실패했습니다.')
+        setTimeout(() => setToastMessage(''), 3000)
+      }
     }
   }
 
