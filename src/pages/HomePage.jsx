@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { authAPI } from '../services/api'
+import { authAPI, bookAPI } from '../services/api'
 import ReadingStartModal from '../components/ReadingStartModal'
 import ReadingEndModal from '../components/ReadingEndModal'
 import Toast from '../components/Toast'
@@ -53,33 +53,44 @@ const HomePage = () => {
     }
   }, [searchParams, setSearchParams, setOAuthUser, isAuthenticated])
 
-  // localStorage에서 읽는 중인 책들 로드
+  // 백엔드 API에서 읽는 중인 책들 로드
   useEffect(() => {
-    const loadReadingBooks = () => {
+    const loadReadingBooks = async () => {
       try {
-        const savedBooks = localStorage.getItem('myLibraryBooks')
-        if (savedBooks) {
-          const allBooks = JSON.parse(savedBooks)
-          const reading = allBooks.filter(book => book.status === 'reading')
-          setReadingBooks(reading)
-        }
+        // 백엔드 API에서 책 목록 가져오기
+        const allBooks = await bookAPI.getMyBooks()
+        const reading = allBooks.filter(book => book.status === 'reading')
+        setReadingBooks(reading)
       } catch (error) {
-        console.error('Failed to load reading books:', error)
+        console.error('Failed to load reading books from API:', error)
+        // 폴백: localStorage 사용
+        try {
+          const savedBooks = localStorage.getItem('myLibraryBooks')
+          if (savedBooks) {
+            const allBooks = JSON.parse(savedBooks)
+            const reading = allBooks.filter(book => book.status === 'reading')
+            setReadingBooks(reading)
+          }
+        } catch (localError) {
+          console.error('Failed to load reading books from localStorage:', localError)
+        }
       }
     }
 
-    loadReadingBooks()
+    if (isAuthenticated) {
+      loadReadingBooks()
+    }
 
     // storage 이벤트 리스너 추가 (다른 탭에서 변경 시 업데이트)
     const handleStorageChange = (e) => {
-      if (e.key === 'myLibraryBooks') {
+      if (e.key === 'myLibraryBooks' && isAuthenticated) {
         loadReadingBooks()
       }
     }
 
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
+  }, [isAuthenticated])
 
   // 독서 세션 로드
   useEffect(() => {
@@ -190,40 +201,14 @@ const HomePage = () => {
       readingSession.startTime
     )
 
-    // localStorage에서 모든 책 로드
+    // 백엔드에서 책 목록 다시 로드 (진행률은 백엔드에서 자동 업데이트됨)
     try {
-      const savedBooks = localStorage.getItem('myLibraryBooks')
-      if (savedBooks) {
-        const allBooks = JSON.parse(savedBooks)
-        
-        // 진행률 업데이트
-        const newReadPage = pagesRead
-        const newProgress = book.totalPage > 0
-          ? Math.min(100, Math.round((newReadPage / book.totalPage) * 100))
-          : 0
-
-        // 책 정보 업데이트
-        const updatedBooks = allBooks.map(b => {
-          if (b.id === selectedBookId) {
-            return {
-              ...b,
-              readPage: newReadPage,
-              progress: newProgress,
-              totalReadingTime: (b.totalReadingTime || 0) + sessionDuration,
-              status: newProgress === 100 ? 'completed' : b.status,
-              completedDate: newProgress === 100 && b.status !== 'completed'
-                ? new Date().toISOString().split('T')[0]
-                : b.completedDate
-            }
-          }
-          return b
-        })
-
-        localStorage.setItem('myLibraryBooks', JSON.stringify(updatedBooks))
-        
-        // 읽는 중인 책 목록 업데이트
-        const reading = updatedBooks.filter(book => book.status === 'reading')
-        setReadingBooks(reading)
+      const allBooks = await bookAPI.getMyBooks()
+      const reading = allBooks.filter(b => b.status === 'reading')
+      setReadingBooks(reading)
+      
+      // localStorage도 업데이트 (폴백용)
+      localStorage.setItem('myLibraryBooks', JSON.stringify(allBooks))
       }
     } catch (error) {
       console.error('Failed to update book:', error)
