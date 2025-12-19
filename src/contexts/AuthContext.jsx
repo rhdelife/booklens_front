@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { authAPI } from '../services/api'
 import {
   supabaseLogin,
-  supabaseSignup,
   supabaseGetCurrentUser,
   supabaseLogout,
   supabaseGetSession,
@@ -10,7 +9,6 @@ import {
 } from '../services/supabaseAuth'
 import {
   mockLogin,
-  mockSignup,
   mockGetCurrentUser,
   mockLogout,
 } from '../services/mockAuth'
@@ -172,9 +170,9 @@ export const AuthProvider = ({ children }) => {
 
   // 회원가입 함수
   const signup = async (email, password, name) => {
-    // 1. Supabase 회원가입 시도 (우선)
+    // 백엔드 API만 사용
     try {
-      const response = await supabaseSignup(email, password, name)
+      const response = await authAPI.signup(email, password, name)
       const { user: userData, token } = response
 
       sessionStorage.setItem('user', JSON.stringify(userData))
@@ -182,42 +180,10 @@ export const AuthProvider = ({ children }) => {
         sessionStorage.setItem('token', token)
       }
       setUser(userData)
-      console.log('✅ Supabase 회원가입 성공')
       return userData
-    } catch (supabaseError) {
-      console.warn('Supabase 회원가입 실패:', supabaseError.message)
-
-      // 2. 기존 API 서버 시도
-      try {
-        const response = await authAPI.signup(email, password, name)
-        const { user: userData, token } = response
-
-        sessionStorage.setItem('user', JSON.stringify(userData))
-        if (token) {
-          sessionStorage.setItem('token', token)
-        }
-        setUser(userData)
-        return userData
-      } catch (apiError) {
-        console.warn('API 서버 연결 실패:', apiError.message)
-
-        // 3. 임시 인증으로 폴백
-        try {
-          const response = await mockSignup(email, password, name)
-          const { user: userData, token } = response
-
-          sessionStorage.setItem('user', JSON.stringify(userData))
-          if (token) {
-            sessionStorage.setItem('token', token)
-          }
-          setUser(userData)
-          console.log('✅ 임시 인증 모드로 회원가입 성공')
-          return userData
-        } catch (mockError) {
-          console.error('Signup error (all methods failed):', mockError)
-          throw mockError
-        }
-      }
+    } catch (apiError) {
+      console.error('회원가입 실패:', apiError.message)
+      throw apiError
     }
   }
 
