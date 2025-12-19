@@ -9,6 +9,7 @@ import ReadingPersonaBadge from '../components/ReadingPersonaBadge'
 import { searchBookByISBN, searchBooks } from '../lib/googleBooksApi'
 import { validateRequired, validateLength, validateNumberRange, validateISBN } from '../utils/validation'
 import { getOrCalculatePersona, recalculatePersona } from '../utils/readingPersona'
+import { saveReadingSession } from '../utils/readingHistory'
 
 const MyLibraryPage = () => {
   const navigate = useNavigate()
@@ -297,7 +298,7 @@ const MyLibraryPage = () => {
     setShowEndModal(true)
   }
 
-  const confirmStopReading = (pagesRead) => {
+  const confirmStopReading = async (pagesRead) => {
     if (!selectedBookId || !readingSession) return
 
     const book = books.find(b => b.id === selectedBookId)
@@ -305,6 +306,17 @@ const MyLibraryPage = () => {
 
     // 세션 시간 계산
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
+
+    // 날짜별 독서 기록 저장 (백엔드)
+    await saveReadingSession(
+      book.id,
+      book.title,
+      book.author,
+      book.thumbnail || '',
+      pagesRead,
+      sessionDuration,
+      readingSession.startTime
+    )
 
     // 진행률 업데이트
     const newReadPage = pagesRead
@@ -757,13 +769,13 @@ const MyLibraryPage = () => {
                     setSearchResults([])
                     setSearchMode('isbn')
                   }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-500 transition-colors"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 transition-colors"
                 >
                   추가하기
                 </button>

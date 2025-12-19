@@ -209,6 +209,24 @@ export const readingSessionAPI = {
   getActiveSession: async () => {
     return apiRequest('/reading-sessions/active')
   },
+
+  // 독서 세션 저장 (날짜별 기록)
+  saveReadingSession: async (sessionData) => {
+    return apiRequest('/reading-sessions/save', {
+      method: 'POST',
+      body: JSON.stringify(sessionData),
+    })
+  },
+
+  // 달력용 독서 기록 조회
+  getCalendarData: async (year, month) => {
+    return apiRequest(`/reading-sessions/calendar?year=${year}&month=${month}`)
+  },
+
+  // 특정 날짜의 독서 기록 조회
+  getDateHistory: async (date) => {
+    return apiRequest(`/reading-sessions/date?date=${date}`)
+  },
 }
 
 /**

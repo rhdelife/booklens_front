@@ -349,6 +349,93 @@
 }
 ```
 
+### POST `/api/reading-sessions/save`
+**인증 필요**: Yes
+**설명**: 독서 세션을 날짜별 기록으로 저장 (달력용)
+**요청:**
+```json
+{
+  "bookId": 1,
+  "bookTitle": "책 제목",
+  "bookAuthor": "저자",
+  "bookThumbnail": "https://...",
+  "pagesRead": 50,
+  "duration": 3600,
+  "startTime": "2024-01-01T12:00:00.000Z"
+}
+```
+
+**응답:**
+```json
+{
+  "message": "독서 기록이 저장되었습니다"
+}
+```
+
+### GET `/api/reading-sessions/calendar`
+**인증 필요**: Yes
+**Query Parameters:**
+- `year`: 연도 (예: 2024)
+- `month`: 월 (1-12)
+
+**설명**: 달력에 표시할 날짜별 독서 기록 조회
+
+**응답:**
+```json
+{
+  "data": {
+    "2024-01-01": {
+      "date": "2024-01-01",
+      "totalTime": 7200,
+      "sessions": [
+        {
+          "bookId": 1,
+          "bookTitle": "책 제목",
+          "bookAuthor": "저자",
+          "bookThumbnail": "https://...",
+          "pagesRead": 50,
+          "duration": 3600,
+          "startTime": "2024-01-01T12:00:00.000Z"
+        }
+      ]
+    },
+    "2024-01-02": {
+      "date": "2024-01-02",
+      "totalTime": 1800,
+      "sessions": [...]
+    }
+  }
+}
+```
+
+### GET `/api/reading-sessions/date`
+**인증 필요**: Yes
+**Query Parameters:**
+- `date`: 날짜 (YYYY-MM-DD 형식, 예: 2024-01-01)
+
+**설명**: 특정 날짜의 상세 독서 기록 조회
+
+**응답:**
+```json
+{
+  "data": {
+    "date": "2024-01-01",
+    "totalTime": 7200,
+    "sessions": [
+      {
+        "bookId": 1,
+        "bookTitle": "책 제목",
+        "bookAuthor": "저자",
+        "bookThumbnail": "https://...",
+        "pagesRead": 50,
+        "duration": 3600,
+        "startTime": "2024-01-01T12:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
 ---
 
 ## 📝 4. 포스팅 API (`/api/postings/*`)
@@ -541,9 +628,15 @@ CREATE TABLE reading_sessions (
   start_time TIMESTAMP NOT NULL,
   end_time TIMESTAMP,
   pages_read INTEGER,
+  duration INTEGER DEFAULT 0, -- 독서 시간 (초)
+  book_title VARCHAR(255), -- 달력 표시용 (책이 삭제되어도 기록 유지)
+  book_author VARCHAR(255), -- 달력 표시용
+  book_thumbnail TEXT, -- 달력 표시용
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+**참고**: `book_title`, `book_author`, `book_thumbnail`은 달력에서 표시하기 위해 저장합니다. 책이 삭제되어도 독서 기록은 유지됩니다.
 
 ### Postings 테이블
 ```sql
@@ -692,4 +785,3 @@ CREATE TABLE comments (
 - ✅ 책 추가/수정/삭제 가능
 - ✅ 독서 세션 시작/종료 가능
 - ✅ 포스팅 작성/수정/삭제 가능
-

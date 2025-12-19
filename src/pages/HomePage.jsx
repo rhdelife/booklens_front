@@ -5,6 +5,9 @@ import { authAPI } from '../services/api'
 import ReadingStartModal from '../components/ReadingStartModal'
 import ReadingEndModal from '../components/ReadingEndModal'
 import Toast from '../components/Toast'
+import ReadingCalendar from '../components/ReadingCalendar'
+import ReadingDateDetailModal from '../components/ReadingDateDetailModal'
+import { saveReadingSession } from '../utils/readingHistory'
 
 const HomePage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -19,6 +22,9 @@ const HomePage = () => {
   const [showEndModal, setShowEndModal] = useState(false)
   const [selectedBookId, setSelectedBookId] = useState(null)
   const [toastMessage, setToastMessage] = useState('')
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [selectedDateData, setSelectedDateData] = useState(null)
+  const [showDateDetailModal, setShowDateDetailModal] = useState(false)
 
   // OAuth 콜백 처리 (백엔드가 홈 페이지로 리다이렉트한 경우)
   useEffect(() => {
@@ -164,7 +170,7 @@ const HomePage = () => {
     setShowEndModal(true)
   }
 
-  const confirmStopReading = (pagesRead) => {
+  const confirmStopReading = async (pagesRead) => {
     if (!selectedBookId || !readingSession) return
 
     const book = readingBooks.find(b => b.id === selectedBookId)
@@ -172,6 +178,17 @@ const HomePage = () => {
 
     // 세션 시간 계산
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
+
+    // 날짜별 독서 기록 저장 (백엔드)
+    await saveReadingSession(
+      book.id,
+      book.title,
+      book.author,
+      book.thumbnail || '',
+      pagesRead,
+      sessionDuration,
+      readingSession.startTime
+    )
 
     // localStorage에서 모든 책 로드
     try {
@@ -248,6 +265,21 @@ const HomePage = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Reading Calendar Section */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="mb-16">
+          <h2 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">독서 달력</h2>
+          <p className="text-gray-500 text-[15px]">날짜를 클릭하면 해당 날짜의 독서 기록을 확인할 수 있습니다</p>
+        </div>
+        <ReadingCalendar
+          onDateClick={(date, data) => {
+            setSelectedDate(date)
+            setSelectedDateData(data)
+            setShowDateDetailModal(true)
+          }}
+        />
       </section>
 
       {/* Currently Reading Section */}
@@ -359,15 +391,6 @@ const HomePage = () => {
                             읽기 시작
                           </button>
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(`/book/${book.id}`)
-                          }}
-                          className="px-4 py-2 bg-white text-gray-700 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all duration-200 font-medium text-sm"
-                        >
-                          상세보기
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -438,6 +461,18 @@ const HomePage = () => {
         onConfirm={confirmStopReading}
         totalPages={readingBooks.find(b => b.id === selectedBookId)?.totalPage || 0}
         currentPage={readingBooks.find(b => b.id === selectedBookId)?.readPage || 0}
+      />
+
+      {/* Date Detail Modal */}
+      <ReadingDateDetailModal
+        isOpen={showDateDetailModal}
+        date={selectedDate}
+        readingData={selectedDateData}
+        onClose={() => {
+          setShowDateDetailModal(false)
+          setSelectedDate(null)
+          setSelectedDateData(null)
+        }}
       />
 
       {/* Toast */}

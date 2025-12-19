@@ -11,13 +11,6 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      '/api/data4library': {
-        target: 'http://data4library.kr',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/data4library/, '/api'),
-        secure: false,
-      },
-    },
+    proxy: {},
   },
 })
