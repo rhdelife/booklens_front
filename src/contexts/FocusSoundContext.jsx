@@ -11,9 +11,9 @@ export const useFocusSound = () => {
 }
 
 const sounds = {
-  plane: '/soundfolder/airplane.mp3',
-  fire: '/soundfolder/Fire.mp3',
-  water: '/soundfolder/water.mp3',
+  plane: '/sounds/airplane.mp3',
+  fire: '/sounds/Fire.mp3',
+  water: '/sounds/water.mp3',
 }
 
 export const FocusSoundProvider = ({ children }) => {
