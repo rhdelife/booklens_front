@@ -236,7 +236,6 @@ const HomePage = () => {
       
       // localStorage도 업데이트 (폴백용)
       localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
-      }
     } catch (error) {
       console.error('Failed to update book:', error)
     }
