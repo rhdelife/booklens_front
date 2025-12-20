@@ -165,7 +165,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
       }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-md w-full border border-gray-100 mx-auto my-auto max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full mx-auto border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

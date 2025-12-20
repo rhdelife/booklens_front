@@ -31,7 +31,7 @@ const Navbar = () => {
           font-weight: 300;
         }
       `}</style>
-      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-b border-gray-100 dark:border-gray-800">
+      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#29303A]/80 backdrop-blur-2xl border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -101,7 +101,7 @@ const Navbar = () => {
                   <div className="flex items-center space-x-3">
                     <div
                       onClick={() => setShowProfileModal(true)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      className="cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center"
                     >
                       <DefaultProfileIcon
                         size={36}

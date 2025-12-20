@@ -59,7 +59,7 @@ const ReadingDateDetailModal = ({ isOpen, date, readingData: initialData, onClos
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl max-w-md w-full border border-gray-100 max-h-[80vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full mx-auto border border-gray-100 dark:border-gray-700 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

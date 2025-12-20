@@ -6,9 +6,50 @@
 import { API_BASE_URL } from '../utils/apiConfig'
 
 /**
- * API 요청 헬퍼 함수
+ * 지연 함수 (재시도용)
  */
-const apiRequest = async (endpoint, options = {}) => {
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+/**
+ * 재시도 가능한 오류인지 확인
+ */
+const isRetryableError = (error, response) => {
+  // 네트워크 오류
+  if (error && error.name === 'TypeError' && error.message.includes('fetch')) {
+    return true
+  }
+  
+  // 서버 오류 (5xx)
+  if (response && response.status >= 500) {
+    return true
+  }
+  
+  // 데이터베이스 연결 오류 (백엔드에서 반환하는 경우)
+  if (error && error.message) {
+    const dbErrorKeywords = [
+      'database',
+      'connection',
+      'timeout',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'PrismaClientInitializationError',
+      "Can't reach database server"
+    ]
+    return dbErrorKeywords.some(keyword => 
+      error.message.toLowerCase().includes(keyword.toLowerCase())
+    )
+  }
+  
+  return false
+}
+
+/**
+ * API 요청 헬퍼 함수 (재시도 로직 포함)
+ */
+const apiRequest = async (endpoint, options = {}, retryCount = 0) => {
+  const MAX_RETRIES = 3
+  const INITIAL_DELAY = 1000 // 1초
+  
   // API_BASE_URL이 설정되지 않았으면 명확한 에러
   if (!API_BASE_URL) {
     const errorMessage =
@@ -53,30 +94,73 @@ const apiRequest = async (endpoint, options = {}) => {
     if (!response.ok) {
       // 에러 응답 처리 (백엔드가 { error: string } 형식 사용)
       const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`
+      const error = new Error(errorMessage)
+      
+      // 재시도 가능한 오류이고 재시도 횟수가 남아있으면 재시도
+      if (isRetryableError(error, response) && retryCount < MAX_RETRIES) {
+        const delayMs = INITIAL_DELAY * Math.pow(2, retryCount) // Exponential backoff
+        console.warn(`API 요청 실패 (재시도 ${retryCount + 1}/${MAX_RETRIES}):`, {
+          url,
+          status: response.status,
+          error: errorMessage,
+          retryIn: `${delayMs}ms`
+        })
+        await delay(delayMs)
+        return apiRequest(endpoint, options, retryCount + 1)
+      }
+      
       console.error('API Error Response:', {
         url,
         status: response.status,
         statusText: response.statusText,
         data,
+        retryCount,
       })
-      throw new Error(errorMessage)
+      throw error
     }
 
     return data
   } catch (error) {
     // 네트워크 에러나 기타 에러 처리
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      // 재시도 가능한 네트워크 오류
+      if (retryCount < MAX_RETRIES) {
+        const delayMs = INITIAL_DELAY * Math.pow(2, retryCount)
+        console.warn(`네트워크 오류 (재시도 ${retryCount + 1}/${MAX_RETRIES}):`, {
+          url,
+          error: error.message,
+          retryIn: `${delayMs}ms`
+        })
+        await delay(delayMs)
+        return apiRequest(endpoint, options, retryCount + 1)
+      }
+      
       console.error('Network Error - 백엔드 서버에 연결할 수 없습니다:', {
         url,
         error: error.message,
         hint: '백엔드 서버가 실행 중인지 확인하세요. API_BASE_URL: ' + API_BASE_URL,
+        retryCount,
       })
-      throw new Error('서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.')
+      throw new Error('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
     }
+    
+    // 데이터베이스 연결 오류 감지
+    if (isRetryableError(error) && retryCount < MAX_RETRIES) {
+      const delayMs = INITIAL_DELAY * Math.pow(2, retryCount)
+      console.warn(`일시적 오류 감지 (재시도 ${retryCount + 1}/${MAX_RETRIES}):`, {
+        url,
+        error: error.message,
+        retryIn: `${delayMs}ms`
+      })
+      await delay(delayMs)
+      return apiRequest(endpoint, options, retryCount + 1)
+    }
+    
     console.error('API Request Error:', {
       url,
       error: error.message,
       stack: error.stack,
+      retryCount,
     })
     throw error
   }

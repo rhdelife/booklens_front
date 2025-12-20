@@ -21,9 +21,9 @@ const DefaultProfileIcon = ({ size = 32, name, className = '' }) => {
 
   return (
     <div
-      className={`${sizeClass} ${className} rounded-full bg-gray-900 flex items-center justify-center text-white font-medium ${textSizeClass}`}
+      className={`${sizeClass} ${className} rounded-full bg-gray-900 flex items-center justify-center text-white font-medium ${textSizeClass} leading-none`}
     >
-      {initials}
+      <span className="flex items-center justify-center">{initials}</span>
     </div>
   )
 }

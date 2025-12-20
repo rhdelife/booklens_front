@@ -90,7 +90,7 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#29303A] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center mb-4">
           <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">회원가입</h1>

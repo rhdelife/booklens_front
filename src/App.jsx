@@ -22,7 +22,7 @@ function App() {
       <AuthProvider>
         <FocusSoundProvider>
           <Router>
-            <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900">
+            <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#29303A]">
               <ConditionalNavbar />
               <Routes>
                 {/* Public Routes */}

@@ -175,7 +175,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
       }}
     >
       <div 
-        className="bg-white rounded-2xl max-w-2xl w-full border border-gray-200"
+        className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full mx-auto border border-gray-200 dark:border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

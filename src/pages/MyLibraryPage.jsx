@@ -366,18 +366,35 @@ const MyLibraryPage = () => {
 
       // 백엔드에서 최신 책 목록 다시 로드
       const allBooks = await bookAPI.getMyBooks()
-      // 필드명 변환
-      const transformedBooks = allBooks.map(book => ({
-        ...book,
-        totalPage: book.total_page ?? book.totalPage,
-        readPage: book.read_page ?? book.readPage,
-        totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
-        startDate: book.start_date ?? book.startDate,
-        completedDate: book.completed_date ?? book.completedDate,
-        publishDate: book.publish_date ?? book.publishDate,
-      }))
+      // 필드명 변환 및 완독 상태 자동 업데이트
+      const transformedBooks = allBooks.map(book => {
+        const totalPage = book.total_page ?? book.totalPage
+        const readPage = book.read_page ?? book.readPage
+        const isCompleted = totalPage > 0 && (readPage || 0) >= totalPage
+        
+        return {
+          ...book,
+          totalPage,
+          readPage,
+          totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+          startDate: book.start_date ?? book.startDate,
+          completedDate: isCompleted && !book.completed_date 
+            ? new Date().toISOString().split('T')[0] 
+            : (book.completed_date ?? book.completedDate),
+          publishDate: book.publish_date ?? book.publishDate,
+          // 완독 상태 자동 업데이트
+          status: isCompleted ? 'completed' : (book.status || 'reading'),
+        }
+      })
       setBooks(transformedBooks)
       localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
+      
+      // 완독된 경우 알림
+      const completedBook = transformedBooks.find(b => b.id === bookId && b.status === 'completed')
+      if (completedBook && book.status !== 'completed') {
+        setToastMessage(`축하합니다! "${completedBook.title}" 완독하셨습니다! 🎉`)
+        setTimeout(() => setToastMessage(''), 5000)
+      }
     } catch (error) {
       console.error('Failed to save reading session:', error)
       setToastMessage('독서 기록 저장에 실패했습니다.')
@@ -526,7 +543,7 @@ const MyLibraryPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#29303A]">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="flex justify-between items-start mb-12">
@@ -938,9 +955,14 @@ const MyLibraryPage = () => {
               const isReading = readingSession && readingSession.bookId === book.id
               const currentSessionTime = isReading ? getCurrentSessionTime() : 0
               const totalTime = (book.totalReadingTime || 0) + currentSessionTime
-              const progressPercentage = book.totalPage > 0
-                ? Math.round(((book.readPage || 0) / book.totalPage) * 100)
-                : book.progress
+              // 진행률 계산 (100%를 넘지 않도록 제한)
+              const rawProgress = book.totalPage > 0
+                ? ((book.readPage || 0) / book.totalPage) * 100
+                : book.progress || 0
+              const progressPercentage = Math.min(100, Math.round(rawProgress))
+              
+              // 완독 체크: readPage가 totalPage 이상이면 완독으로 처리
+              const isCompleted = book.totalPage > 0 && (book.readPage || 0) >= book.totalPage
 
               return (
                 <div
@@ -1010,14 +1032,19 @@ const MyLibraryPage = () => {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               진행률: {progressPercentage}%
+                              {isCompleted && <span className="ml-2 text-green-600 dark:text-green-400 font-medium">완독!</span>}
                             </span>
                             <span className="text-sm text-gray-400 dark:text-gray-500">
-                              {book.readPage || 0} / {book.totalPage || 0} 페이지
+                              {Math.min(book.readPage || 0, book.totalPage || 0)} / {book.totalPage || 0} 페이지
                             </span>
                           </div>
                           <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
                             <div
-                              className="bg-gray-900 dark:bg-gray-100 h-2 rounded-full transition-all duration-300"
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                isCompleted 
+                                  ? 'bg-green-600 dark:bg-green-500' 
+                                  : 'bg-gray-900 dark:bg-gray-100'
+                              }`}
                               style={{ width: `${progressPercentage}%` }}
                             ></div>
                           </div>
@@ -1047,8 +1074,17 @@ const MyLibraryPage = () => {
                             }}
                             className="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 font-medium text-sm"
                           >
-                            읽기 종료
+                            {isCompleted ? '완독 처리' : '읽기 종료'}
                           </button>
+                        </div>
+                      )}
+                      
+                      {/* 완독 알림 */}
+                      {isCompleted && book.status === 'reading' && (
+                        <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                          <p className="text-sm text-green-700 dark:text-green-400 text-center font-medium">
+                            🎉 완독하셨습니다! 읽기 종료 버튼을 눌러 완독 처리하세요.
+                          </p>
                         </div>
                       )}
 

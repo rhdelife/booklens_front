@@ -252,7 +252,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#29303A]">
       {/* Hero Section */}
       <section className="relative">
         <div className="max-w-6xl mx-auto px-6 py-24">
