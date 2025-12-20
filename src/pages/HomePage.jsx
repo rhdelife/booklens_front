@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useDarkMode } from '../contexts/DarkModeContext'
 import { authAPI, bookAPI } from '../services/api'
 import ReadingStartModal from '../components/ReadingStartModal'
 import ReadingEndModal from '../components/ReadingEndModal'
 import Toast from '../components/Toast'
 import ReadingCalendar from '../components/ReadingCalendar'
 import ReadingDateDetailModal from '../components/ReadingDateDetailModal'
+import TextPressure from '../components/TextPressure'
 import { saveReadingSession } from '../utils/readingHistory'
 
 const HomePage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { setOAuthUser, isAuthenticated } = useAuth()
-  
+  const { isDark } = useDarkMode()
+
   // 현재 읽고 있는 책들
   const [readingBooks, setReadingBooks] = useState([])
   const [readingSession, setReadingSession] = useState(null)
@@ -57,7 +60,7 @@ const HomePage = () => {
   useEffect(() => {
     const loadReadingBooks = async () => {
       if (!isAuthenticated) return
-      
+
       try {
         // 백엔드 API에서 책 목록 가져오기
         const allBooks = await bookAPI.getMyBooks()
@@ -233,7 +236,7 @@ const HomePage = () => {
       }))
       const reading = transformedBooks.filter(b => b.status === 'reading')
       setReadingBooks(reading)
-      
+
       // localStorage도 업데이트 (폴백용)
       localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
     } catch (error) {
@@ -249,15 +252,23 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900">
       {/* Hero Section */}
       <section className="relative">
         <div className="max-w-6xl mx-auto px-6 py-24">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-6xl font-semibold text-gray-900 mb-6 tracking-tight">
-              BookLens
-            </h1>
-            <p className="text-xl text-gray-600 mb-12 font-light leading-relaxed">
+            <div className="mb-6 flex justify-center">
+              <TextPressure
+                text="BookLens"
+                textColor={isDark ? "#F9FAFB" : "#1F2937"}
+                width={true}
+                weight={true}
+                italic={true}
+                className="flex"
+                minFontSize={48}
+              />
+            </div>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 font-light leading-relaxed">
               당신의 독서 여정을 기록하고 공유하세요
             </p>
             <div className="flex justify-center gap-4">
@@ -269,7 +280,7 @@ const HomePage = () => {
               </Link>
               <Link
                 to="/mylibrary"
-                className="bg-white text-gray-900 px-8 py-3.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all duration-200 font-medium text-sm"
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-8 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm"
               >
                 내 서재
               </Link>
@@ -281,8 +292,8 @@ const HomePage = () => {
       {/* Reading Calendar Section */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="mb-16">
-          <h2 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">독서 달력</h2>
-          <p className="text-gray-500 text-[15px]">날짜를 클릭하면 해당 날짜의 독서 기록을 확인할 수 있습니다</p>
+          <h2 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">독서 달력</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-[15px]">날짜를 클릭하면 해당 날짜의 독서 기록을 확인할 수 있습니다</p>
         </div>
         <ReadingCalendar
           onDateClick={(date, data) => {
@@ -297,8 +308,8 @@ const HomePage = () => {
       {readingBooks.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 py-20">
           <div className="mb-16">
-            <h2 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">현재 읽고 있는 책</h2>
-            <p className="text-gray-500 text-[15px]">독서를 계속하거나 새로 시작해보세요</p>
+            <h2 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">현재 읽고 있는 책</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-[15px]">독서를 계속하거나 새로 시작해보세요</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -313,9 +324,8 @@ const HomePage = () => {
               return (
                 <div
                   key={book.id}
-                  className={`bg-white rounded-2xl p-6 border border-gray-100 hover:border-gray-200 transition-all duration-200 ${
-                    book.status === 'reading' && !isReading ? 'cursor-pointer' : ''
-                  }`}
+                  className={`bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 ${book.status === 'reading' && !isReading ? 'cursor-pointer' : ''
+                    }`}
                   onClick={() => {
                     if (book.status === 'reading' && !isReading) {
                       handleStartReading(book.id)

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useDarkMode } from '../contexts/DarkModeContext'
 
 const CommunityPage = () => {
   const { user } = useAuth()
+  const { isDark } = useDarkMode()
   const location = useLocation()
   const navigate = useNavigate()
   const [postings, setPostings] = useState([])
@@ -158,25 +160,25 @@ const CommunityPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2 tracking-tight">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">
             커뮤니티
             {showMyPostsOnly && (
-              <span className="ml-3 text-base font-normal text-gray-500">(내 포스트만)</span>
+              <span className="ml-3 text-base font-normal text-gray-500 dark:text-gray-400">(내 포스트만)</span>
             )}
           </h1>
-          <p className="text-gray-500 text-[15px]">독서 후기를 공유하고 다른 사람들의 생각을 읽어보세요</p>
+          <p className="text-gray-500 dark:text-gray-400 text-[15px]">독서 후기를 공유하고 다른 사람들의 생각을 읽어보세요</p>
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 검색
               </label>
               <input
@@ -184,19 +186,19 @@ const CommunityPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="책 제목, 저자, 내용, 태그로 검색..."
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm"
               />
             </div>
 
             {/* Sort */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 정렬
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 text-sm"
               >
                 <option value="latest">최신순</option>
                 <option value="rating">평점순</option>
@@ -210,8 +212,8 @@ const CommunityPage = () => {
                 <button
                   onClick={() => setShowMyPostsOnly(!showMyPostsOnly)}
                   className={`w-full px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm ${showMyPostsOnly
-                      ? 'bg-gray-900 text-white hover:bg-gray-800'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                     }`}
                 >
                   {showMyPostsOnly ? '전체 보기' : '내 포스트만'}
@@ -223,25 +225,25 @@ const CommunityPage = () => {
 
         {/* Postings Count */}
         <div className="mb-6">
-          <p className="text-gray-500 text-sm">
-            총 <span className="font-semibold text-gray-900">{filteredPostings.length}</span>개의 포스팅
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            총 <span className="font-semibold text-gray-900 dark:text-gray-100">{filteredPostings.length}</span>개의 포스팅
           </p>
         </div>
 
         {/* Postings Grid */}
         {filteredPostings.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
             <div className="text-6xl mb-4">📚</div>
-            <p className="text-gray-500 text-base mb-2">
+            <p className="text-gray-500 dark:text-gray-400 text-base mb-2">
               {searchQuery ? '검색 결과가 없습니다' : '아직 포스팅이 없습니다'}
             </p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">
               {searchQuery ? '다른 검색어를 시도해보세요' : '첫 번째 포스팅을 작성해보세요!'}
             </p>
             {!searchQuery && (
               <Link
                 to="/mylibrary"
-                className="inline-block mt-4 px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
+                className="inline-block mt-4 px-6 py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 font-medium text-sm"
               >
                 마이라이브러리로 가기
               </Link>
@@ -255,25 +257,25 @@ const CommunityPage = () => {
               return (
                 <div
                   key={posting.id}
-                  className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 transition-all duration-200"
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200"
                 >
                   {/* Card Header */}
                   <div className="p-6 pb-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">
                           {posting.title}
                         </h3>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {posting.bookTitle}
                           </span>
-                          <span className="text-xs text-gray-400">by {posting.bookAuthor}</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">by {posting.bookAuthor}</span>
                         </div>
                         {posting.userName && (
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs text-gray-400">작성자:</span>
-                            <span className="text-xs font-medium text-gray-700">
+                            <span className="text-xs text-gray-400 dark:text-gray-500">작성자:</span>
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                               {posting.userName}
                             </span>
                           </div>
@@ -323,7 +325,7 @@ const CommunityPage = () => {
                     </div>
 
                     {/* Content Preview */}
-                    <p className="text-sm text-gray-500 line-clamp-3 mb-4 leading-relaxed">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 mb-4 leading-relaxed">
                       {getPreview(posting.content)}
                     </p>
 
@@ -333,13 +335,13 @@ const CommunityPage = () => {
                         {posting.tags.slice(0, 3).map((tag, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium"
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium"
                           >
                             #{tag}
                           </span>
                         ))}
                         {posting.tags.length > 3 && (
-                          <span className="px-2 py-1 text-gray-400 text-xs">
+                          <span className="px-2 py-1 text-gray-400 dark:text-gray-500 text-xs">
                             +{posting.tags.length - 3}
                           </span>
                         )}
@@ -347,12 +349,12 @@ const CommunityPage = () => {
                     )}
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <span className="text-xs text-gray-400">
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         {formatDate(posting.createdAt)}
                       </span>
                       {posting.completedDate && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
                           완독: {posting.completedDate}
                         </span>
                       )}
@@ -360,8 +362,8 @@ const CommunityPage = () => {
                   </div>
 
                   {/* Card Footer with View Button */}
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    <button className="w-full px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm">
+                  <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
+                    <button className="w-full px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 font-medium text-sm">
                       자세히 보기
                     </button>
                   </div>

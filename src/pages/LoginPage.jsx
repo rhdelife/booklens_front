@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useDarkMode } from '../contexts/DarkModeContext'
 import TextPressure from '../components/TextPressure'
 import { validateEmail, validatePassword } from '../utils/validation'
 import { startGoogleLogin } from '../services/oauth'
@@ -12,6 +13,7 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { isDark } = useDarkMode()
   const navigate = useNavigate()
 
   // 실시간 검증
@@ -69,12 +71,12 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-900 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-4 my-8">
         <div className="flex justify-center">
           <TextPressure
             text="|BookLens|"
-            textColor="#1F2937"
+            textColor={isDark ? "#F9FAFB" : "#1F2937"}
             width={true}
             weight={true}
             italic={true}
@@ -85,20 +87,20 @@ const LoginPage = () => {
       </div>
       <div className="max-w-md w-full space-y-4">
         {/* Login Card Section */}
-        <div className="bg-white rounded-2xl p-8 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
             )}
 
             <div className="flex flex-col items-center justify-center mb-6">
-              <p className="text-gray-600 text-[15px] font-normal">계정에 로그인하세요</p>
+              <p className="text-gray-600 dark:text-gray-400 text-[15px] font-normal">계정에 로그인하세요</p>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 이메일
               </label>
               <input
@@ -113,8 +115,8 @@ const LoginPage = () => {
                   validateField('email', e.target.value)
                 }}
                 onBlur={(e) => validateField('email', e.target.value)}
-                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-gray-900 placeholder:text-gray-400 text-sm ${
-                  errors.email ? 'border-red-300' : 'border-gray-200'
+                className={`w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm ${
+                  errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
                 }`}
                 placeholder="example@email.com"
               />
@@ -124,7 +126,7 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 비밀번호
               </label>
               <input
@@ -139,8 +141,8 @@ const LoginPage = () => {
                   validateField('password', e.target.value)
                 }}
                 onBlur={(e) => validateField('password', e.target.value)}
-                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-gray-900 placeholder:text-gray-400 text-sm ${
-                  errors.password ? 'border-red-300' : 'border-gray-200'
+                className={`w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm ${
+                  errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
                 }`}
                 placeholder="비밀번호를 입력하세요"
               />
@@ -157,13 +159,13 @@ const LoginPage = () => {
                   type="checkbox"
                   className="h-4 w-4 text-gray-900 focus:ring-gray-900 border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 dark:text-gray-400">
                   로그인 상태 유지
                 </label>
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-normal text-gray-600 hover:text-gray-900 transition-colors">
+                <a href="#" className="font-normal text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
                   비밀번호 찾기
                 </a>
               </div>
@@ -172,7 +174,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-medium hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="w-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 py-3.5 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {loading ? '로그인 중...' : '로그인'}
             </button>
@@ -181,10 +183,10 @@ const LoginPage = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-100"></div>
+                <div className="w-full border-t border-gray-100 dark:border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-400">또는</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500">또는</span>
               </div>
             </div>
 
@@ -192,7 +194,7 @@ const LoginPage = () => {
               <button
                 type="button"
                 onClick={startGoogleLogin}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200 text-sm"
+                className="w-full flex items-center justify-center px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 text-sm"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path
@@ -218,9 +220,9 @@ const LoginPage = () => {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               계정이 없으신가요?{' '}
-              <Link to="/signup" className="font-medium text-gray-900 hover:text-gray-700 transition-colors">
+              <Link to="/signup" className="font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                 회원가입
               </Link>
             </p>

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useDarkMode } from '../contexts/DarkModeContext'
 
 const PostingPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
+  const { isDark } = useDarkMode()
   const book = location.state?.book
   const editingPosting = location.state?.editingPosting
   const isEditing = !!editingPosting
@@ -154,33 +156,33 @@ const PostingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-200 to-gray-300">
+    <div className="min-h-screen bg-gradient-to-b from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/mylibrary')}
-            className="text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2 transition-colors"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4 flex items-center gap-2 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             뒤로가기
           </button>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {isEditing ? 'Edit Posting' : 'Write a Posting'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             {isEditing ? 'Edit your posting' : 'Share your thoughts about a completed book'}
           </p>
         </div>
 
         {/* Book Info Card */}
-        <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700 mb-8">
           <div className="flex items-start gap-4">
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{currentBook.title}</h2>
-              <p className="text-gray-600 mb-4">{currentBook.author}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{currentBook.title}</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{currentBook.author}</p>
               {currentBook.completedDate && (
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <span>완독일:</span>
@@ -188,33 +190,33 @@ const PostingPage = () => {
                 </div>
               )}
             </div>
-            <div className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-bold">
+            <div className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold">
               완독
             </div>
           </div>
         </div>
 
         {/* Posting Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
           <div className="space-y-6">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                포스팅 제목 <span className="text-gray-400">(선택)</span>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                포스팅 제목 <span className="text-gray-400 dark:text-gray-500">(선택)</span>
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder={`${currentBook.title} POSTING`}
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm"
               />
-              <p className="text-xs text-gray-400 mt-1">If you don't enter a title, the default title will be used.</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">If you don't enter a title, the default title will be used.</p>
             </div>
 
             {/* Rating */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Rating
               </label>
               <div className="flex items-center gap-2">
@@ -229,14 +231,14 @@ const PostingPage = () => {
                     ★
                   </button>
                 ))}
-                <span className="ml-2 text-gray-600 font-medium">{formData.rating}점</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400 font-medium">{formData.rating}점</span>
               </div>
             </div>
 
             {/* Content */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                내용 <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                내용 <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <textarea
                 value={formData.content}
@@ -244,26 +246,26 @@ const PostingPage = () => {
                 placeholder="이 책을 읽고 느낀 점, 인상 깊었던 부분, 추천하는 이유 등을 자유롭게 작성해주세요..."
                 rows={12}
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 resize-none text-sm"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 resize-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 {formData.content.length}자
               </p>
             </div>
 
             {/* Tags */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Tags <span className="text-gray-400">(Optional)</span>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Tags <span className="text-gray-400 dark:text-gray-500">(Optional)</span>
               </label>
               <input
                 type="text"
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 placeholder="예: 소설, 추리, 감동 (쉼표로 구분)"
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-sm"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm"
               />
-              <p className="text-xs text-gray-400 mt-1">태그를 쉼표로 구분하여 입력하세요.</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">태그를 쉼표로 구분하여 입력하세요.</p>
             </div>
 
             {/* Submit Buttons */}
@@ -271,14 +273,14 @@ const PostingPage = () => {
               <button
                 type="button"
                 onClick={() => navigate('/mylibrary')}
-                className="flex-1 px-6 py-3 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium text-sm"
+                className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!formData.content.trim()}
-                className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                className="flex-1 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 font-medium disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-sm"
               >
                 {isEditing ? 'Edit Posting' : 'Write a Posting'}
               </button>
