@@ -29,7 +29,9 @@ export const saveReadingSession = async (bookId, bookTitle, bookAuthor, bookThum
 
     // 백엔드에 저장 시도
     try {
-      await readingSessionAPI.saveReadingSession(sessionData)
+      const response = await readingSessionAPI.saveReadingSession(sessionData)
+      // 백엔드 응답 반환 (isCompleted 정보 포함)
+      return response?.data || { message: '독서 기록이 저장되었습니다', isCompleted: false }
     } catch (error) {
       console.warn('Failed to save reading session to backend, using localStorage as fallback:', error)
       // 백엔드 실패 시 localStorage에 저장 (폴백)
@@ -57,9 +59,11 @@ export const saveReadingSession = async (bookId, bookTitle, bookAuthor, bookThum
 
       history[dateString].totalTime += duration
       localStorage.setItem('readingHistory', JSON.stringify(history))
+      return { message: '독서 기록이 저장되었습니다', isCompleted: false }
     }
   } catch (error) {
     console.error('Failed to save reading session:', error)
+    return { message: '독서 기록 저장에 실패했습니다', isCompleted: false }
   }
 }
 

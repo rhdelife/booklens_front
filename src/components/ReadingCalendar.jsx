@@ -113,32 +113,32 @@ const ReadingCalendar = ({ onDateClick }) => {
   const weekDays = ['일', '월', '화', '수', '목', '금', '토']
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
           {currentDate.getFullYear()}년 {monthNames[currentDate.getMonth()]}
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center justify-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
             onClick={goToToday}
-            className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             오늘
           </button>
           <button
             onClick={goToNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center justify-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -148,7 +148,7 @@ const ReadingCalendar = ({ onDateClick }) => {
       {/* 요일 헤더 */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {weekDays.map((day) => (
-          <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+          <div key={day} className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 py-2">
             {day}
           </div>
         ))}
@@ -171,11 +171,11 @@ const ReadingCalendar = ({ onDateClick }) => {
                 }
               }}
               className={`
-                aspect-square p-2 rounded-lg transition-all
-                ${!day.isCurrentMonth ? 'text-gray-300' : ''}
-                ${today ? 'ring-2 ring-gray-900' : ''}
-                ${hasRecord ? 'bg-gray-900 text-white hover:bg-gray-800 cursor-pointer' : 'hover:bg-gray-50'}
-                ${!hasRecord && day.isCurrentMonth ? 'text-gray-900' : ''}
+                aspect-square p-2 rounded-lg transition-all flex flex-col items-center justify-center
+                ${!day.isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : ''}
+                ${today ? 'ring-2 ring-gray-900 dark:ring-gray-100' : ''}
+                ${hasRecord ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}
+                ${!hasRecord && day.isCurrentMonth ? 'text-gray-900 dark:text-gray-100' : ''}
               `}
             >
               <div className="text-sm font-medium mb-1">{day.date}</div>

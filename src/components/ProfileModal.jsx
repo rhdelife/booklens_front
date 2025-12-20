@@ -169,20 +169,20 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-semibold text-gray-900 tracking-tight">프로필</h2>
+        <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">프로필</h2>
           <div className="flex items-center gap-2">
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors text-sm font-medium"
               >
                 편집
               </button>
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors p-1"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -210,7 +210,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
                 />
               )}
               {isEditing && (
-                <label className="absolute bottom-0 right-0 bg-gray-900 text-white p-2 rounded-full cursor-pointer hover:bg-gray-800 transition-colors">
+                <label className="absolute bottom-0 right-0 flex items-center justify-center bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 p-2 rounded-full cursor-pointer hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />

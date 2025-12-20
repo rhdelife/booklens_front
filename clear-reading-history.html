@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>독서 기록 초기화</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #b91c1c;
+        }
+        .info {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .warning {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📅 독서 기록 초기화</h1>
+    
+    <div class="info">
+        <h3>현재 localStorage 상태:</h3>
+        <div id="currentStatus"></div>
+    </div>
+
+    <div class="warning">
+        <strong>⚠️ 주의:</strong> 이 작업은 되돌릴 수 없습니다. 
+        독서 기록을 완전히 삭제합니다.
+    </div>
+
+    <button onclick="checkStatus()">상태 확인</button>
+    <button onclick="clearReadingHistory()" style="background-color: #dc2626;">독서 기록 삭제</button>
+    <button onclick="clearAll()" style="background-color: #991b1b;">모든 데이터 삭제</button>
+
+    <div id="result"></div>
+
+    <script>
+        function checkStatus() {
+            const readingHistory = localStorage.getItem('readingHistory');
+            const myLibraryBooks = localStorage.getItem('myLibraryBooks');
+            const readingSession = localStorage.getItem('readingSession');
+            
+            let status = '<ul>';
+            status += `<li><strong>readingHistory:</strong> ${readingHistory ? '있음 (' + Object.keys(JSON.parse(readingHistory)).length + '일)' : '없음'}</li>`;
+            status += `<li><strong>myLibraryBooks:</strong> ${myLibraryBooks ? '있음 (' + JSON.parse(myLibraryBooks).length + '권)' : '없음'}</li>`;
+            status += `<li><strong>readingSession:</strong> ${readingSession ? '있음' : '없음'}</li>`;
+            status += '</ul>';
+            
+            document.getElementById('currentStatus').innerHTML = status;
+        }
+
+        function clearReadingHistory() {
+            if (confirm('정말로 독서 기록(readingHistory)을 삭제하시겠습니까?')) {
+                localStorage.removeItem('readingHistory');
+                document.getElementById('result').innerHTML = 
+                    '<div class="success">✅ 독서 기록이 삭제되었습니다!</div>';
+                checkStatus();
+            }
+        }
+
+        function clearAll() {
+            if (confirm('⚠️ 모든 localStorage 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+                if (confirm('정말로 삭제하시겠습니까? 다시 한 번 확인해주세요.')) {
+                    localStorage.clear();
+                    document.getElementById('result').innerHTML = 
+                        '<div class="success">✅ 모든 데이터가 삭제되었습니다!</div>';
+                    checkStatus();
+                }
+            }
+        }
+
+        // 페이지 로드 시 상태 확인
+        window.onload = checkStatus;
+    </script>
+</body>
+</html>
+

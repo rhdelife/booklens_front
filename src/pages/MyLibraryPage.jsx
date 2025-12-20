@@ -353,8 +353,9 @@ const MyLibraryPage = () => {
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
 
     // 날짜별 독서 기록 저장 (백엔드) - 진행률은 백엔드에서 자동 업데이트됨
+    let completedBook = null
     try {
-      await saveReadingSession(
+      const saveResult = await saveReadingSession(
         bookId,
         book.title,
         book.author,
@@ -366,34 +367,33 @@ const MyLibraryPage = () => {
 
       // 백엔드에서 최신 책 목록 다시 로드
       const allBooks = await bookAPI.getMyBooks()
-      // 필드명 변환 및 완독 상태 자동 업데이트
-      const transformedBooks = allBooks.map(book => {
-        const totalPage = book.total_page ?? book.totalPage
-        const readPage = book.read_page ?? book.readPage
-        const isCompleted = totalPage > 0 && (readPage || 0) >= totalPage
-        
-        return {
-          ...book,
-          totalPage,
-          readPage,
-          totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
-          startDate: book.start_date ?? book.startDate,
-          completedDate: isCompleted && !book.completed_date 
-            ? new Date().toISOString().split('T')[0] 
-            : (book.completed_date ?? book.completedDate),
-          publishDate: book.publish_date ?? book.publishDate,
-          // 완독 상태 자동 업데이트
-          status: isCompleted ? 'completed' : (book.status || 'reading'),
-        }
-      })
+      // 필드명 변환
+      const transformedBooks = allBooks.map(book => ({
+        ...book,
+        totalPage: book.total_page ?? book.totalPage,
+        readPage: book.read_page ?? book.readPage,
+        totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+        startDate: book.start_date ?? book.startDate,
+        completedDate: book.completed_date ?? book.completedDate,
+        publishDate: book.publish_date ?? book.publishDate,
+      }))
       setBooks(transformedBooks)
+
+      // 완독된 책 찾기
+      if (saveResult?.isCompleted) {
+        completedBook = transformedBooks.find(b => b.id === bookId && b.status === 'completed')
+      }
       localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
       
-      // 완독된 경우 알림
-      const completedBook = transformedBooks.find(b => b.id === bookId && b.status === 'completed')
-      if (completedBook && book.status !== 'completed') {
+      // 완독된 경우 포스팅 페이지로 리다이렉트
+      if (saveResult?.isCompleted && completedBook) {
         setToastMessage(`축하합니다! "${completedBook.title}" 완독하셨습니다! 🎉`)
-        setTimeout(() => setToastMessage(''), 5000)
+        setTimeout(() => {
+          navigate(`/posting?bookId=${completedBook.id}`)
+        }, 1500)
+      } else {
+        setToastMessage(saveResult?.message || '독서가 종료되었습니다.')
+        setTimeout(() => setToastMessage(''), 3000)
       }
     } catch (error) {
       console.error('Failed to save reading session:', error)
@@ -404,8 +404,6 @@ const MyLibraryPage = () => {
     setReadingSession(null)
     setShowEndModal(false)
     setSelectedBookId(null)
-    setToastMessage('독서가 종료되었습니다.')
-    setTimeout(() => setToastMessage(''), 3000)
   }
 
   const handleProgressChange = (bookId, change) => {
