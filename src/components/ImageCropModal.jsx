@@ -8,7 +8,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
   const canvasRef = useRef(null)
   const imageRef = useRef(null)
   const containerRef = useRef(null)
-  
+
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -26,7 +26,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
     img.onload = () => {
       setImageSize({ width: img.width, height: img.height })
       setImageLoaded(true)
-      
+
       // 초기 스케일 계산 (이미지가 크롭 영역보다 작으면 확대)
       const initialScale = Math.max(
         CROP_SIZE / img.width,
@@ -34,7 +34,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
         1
       )
       setScale(initialScale)
-      
+
       // 중앙 정렬
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth
@@ -54,11 +54,11 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
     e.preventDefault()
     e.stopPropagation()
     if (!containerRef.current) return
-    
+
     const rect = containerRef.current.getBoundingClientRect()
     const mouseX = e.clientX - rect.left
     const mouseY = e.clientY - rect.top
-    
+
     setIsDragging(true)
     setDragStart({
       x: mouseX - position.x,
@@ -68,7 +68,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
 
   const handleMouseMove = (e) => {
     if (!isDragging || !containerRef.current || !imageRef.current) return
-    
+
     e.preventDefault()
     e.stopPropagation()
 
@@ -88,7 +88,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
     const cropCenterX = containerWidth / 2
     const cropCenterY = containerHeight / 2
     const cropRadius = CROP_SIZE / 2
-    
+
     // 이미지의 왼쪽 상단이 이동할 수 있는 범위
     const minX = cropCenterX - cropRadius - imgWidth
     const maxX = cropCenterX + cropRadius
@@ -121,30 +121,30 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
 
     const containerWidth = containerRef.current.offsetWidth
     const containerHeight = containerRef.current.offsetHeight
-    
+
     // 크롭 영역의 중앙 좌표 (컨테이너 기준, 절대 좌표)
     const cropCenterX = containerWidth / 2
     const cropCenterY = containerHeight / 2
-    
+
     // 이미지의 왼쪽 상단 좌표 (컨테이너 기준, 절대 좌표)
     const imgLeft = position.x
     const imgTop = position.y
-    
+
     // 크롭 영역 중앙이 이미지 내에서 어느 위치인지 계산 (컨테이너 기준)
     const cropCenterInImageX = cropCenterX - imgLeft
     const cropCenterInImageY = cropCenterY - imgTop
-    
+
     // 원본 이미지 좌표로 변환 (스케일 반영)
     const sourceX = cropCenterInImageX / scale
     const sourceY = cropCenterInImageY / scale
-    
+
     // 크롭 영역 크기 (원본 이미지 기준)
     const cropSize = CROP_SIZE / scale
-    
+
     // Canvas에 그리기
     canvas.width = CROP_SIZE
     canvas.height = CROP_SIZE
-    
+
     // 이미지의 해당 영역을 크롭하여 Canvas에 그리기
     ctx.drawImage(
       img,
@@ -174,7 +174,7 @@ const ImageCropModal = ({ isOpen, imageSrc, onCrop, onClose }) => {
         e.stopPropagation()
       }}
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full mx-auto border border-gray-200 dark:border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >

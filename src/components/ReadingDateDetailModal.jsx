@@ -102,37 +102,37 @@ const ReadingDateDetailModal = ({ isOpen, date, readingData: initialData, onClos
                 <h3 className="text-sm font-medium text-gray-900 mb-3">읽은 책</h3>
                 <div className="space-y-3">
                   {readingData.sessions.map((session, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors"
-                >
-                  <div className="flex items-start gap-4">
-                    {session.bookThumbnail && (
-                      <img
-                        src={session.bookThumbnail}
-                        alt={session.bookTitle}
-                        className="w-16 h-24 object-cover rounded-lg flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
-                        {session.bookTitle}
-                      </h4>
-                      <p className="text-sm text-gray-500 mb-2">{session.bookAuthor}</p>
-                      <div className="space-y-1 text-xs text-gray-600">
-                        {session.pagesRead > 0 && (
-                          <div>
-                            읽은 페이지: <span className="font-medium">{session.pagesRead}페이지</span>
-                          </div>
+                    <div
+                      key={index}
+                      className="p-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors"
+                    >
+                      <div className="flex items-start gap-4">
+                        {session.bookThumbnail && (
+                          <img
+                            src={session.bookThumbnail}
+                            alt={session.bookTitle}
+                            className="w-16 h-24 object-cover rounded-lg flex-shrink-0"
+                          />
                         )}
-                        <div>
-                          독서 시간: <span className="font-medium">{formatTime(session.duration)}</span>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
+                            {session.bookTitle}
+                          </h4>
+                          <p className="text-sm text-gray-500 mb-2">{session.bookAuthor}</p>
+                          <div className="space-y-1 text-xs text-gray-600">
+                            {session.pagesRead > 0 && (
+                              <div>
+                                읽은 페이지: <span className="font-medium">{session.pagesRead}페이지</span>
+                              </div>
+                            )}
+                            <div>
+                              독서 시간: <span className="font-medium">{formatTime(session.duration)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  ))}
                 </div>
               </div>
             </>

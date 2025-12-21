@@ -27,7 +27,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
   const [persona, setPersona] = useState(null)
   const [showCropModal, setShowCropModal] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
-  
+
   // 편집 폼 상태
   const [formData, setFormData] = useState({
     name: '',
@@ -46,7 +46,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         try {
           const parsedBooks = JSON.parse(savedBooks)
           setBooks(parsedBooks)
-          
+
           // 페르소나 계산
           const userId = currentUser?.id || localStorage.getItem('tempUserId') || 'anonymous'
           const calculatedPersona = getOrCalculatePersona(parsedBooks, userId)
@@ -155,7 +155,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
   const hasCustomImage = isEditing ? formData.profileImagePreview : false
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={(e) => {
         // 크롭 모달이 열려있으면 배경 클릭 무시
@@ -164,7 +164,7 @@ const ProfileModal = ({ isOpen, onClose, user }) => {
         }
       }}
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full mx-auto border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >

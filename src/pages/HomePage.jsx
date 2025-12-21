@@ -189,7 +189,7 @@ const HomePage = () => {
     setShowEndModal(true)
   }
 
-  const confirmStopReading = async (pagesRead) => {
+  const confirmStopReading = async (pagesReadInSession) => {
     if (!selectedBookId || !readingSession) return
 
     const book = readingBooks.find(b => b.id === selectedBookId)
@@ -210,13 +210,13 @@ const HomePage = () => {
     // 세션 시간 계산
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
 
-    // 날짜별 독서 기록 저장 (백엔드)
+    // 날짜별 독서 기록 저장 (백엔드) - 이번 세션에서 읽은 페이지 수를 전달
     const saveResult = await saveReadingSession(
       bookId,
       book.title,
       book.author,
       book.thumbnail || '',
-      pagesRead,
+      pagesReadInSession, // 이번 세션에서 읽은 페이지 수
       sessionDuration,
       readingSession.startTime
     )
@@ -238,31 +238,29 @@ const HomePage = () => {
       const reading = transformedBooks.filter(b => b.status === 'reading')
       setReadingBooks(reading)
 
-      // 완독된 책 찾기
-      if (saveResult?.isCompleted) {
-        completedBook = transformedBooks.find(b => b.id === bookId && b.status === 'completed')
-      }
+      // 완독 체크: readPage가 totalPage 이상인지 확인
+      const updatedBook = transformedBooks.find(b => b.id === bookId)
+      const isCompleted = updatedBook && updatedBook.totalPage > 0 && (updatedBook.readPage || 0) >= updatedBook.totalPage
 
       // localStorage도 업데이트 (폴백용)
       localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
+
+      // 세션 종료
+      setReadingSession(null)
+      setShowEndModal(false)
+      setSelectedBookId(null)
+
+      // 완독된 경우 즉시 포스팅 페이지로 리다이렉트
+      if (isCompleted && updatedBook) {
+        navigate(`/posting?bookId=${updatedBook.id}`)
+        return
+      } else {
+        setToastMessage(saveResult?.message || '독서가 종료되었습니다.')
+        setTimeout(() => setToastMessage(''), 3000)
+      }
     } catch (error) {
       console.error('Failed to update book:', error)
-    }
-
-    // 세션 종료
-    setReadingSession(null)
-    setShowEndModal(false)
-    setSelectedBookId(null)
-
-    // 완독된 경우 포스팅 페이지로 리다이렉트
-    if (saveResult?.isCompleted && completedBook) {
-      setToastMessage(`축하합니다! "${completedBook.title}" 완독하셨습니다! 🎉`)
-      setTimeout(() => {
-        navigate(`/posting?bookId=${completedBook.id}`)
-      }, 1500)
-    } else {
-      setToastMessage(saveResult?.message || '독서가 종료되었습니다.')
-      setTimeout(() => setToastMessage(''), 3000)
+      setToastMessage('독서 기록 저장에 실패했습니다.')
     }
   }
 
