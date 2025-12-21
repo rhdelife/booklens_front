@@ -189,7 +189,7 @@ const HomePage = () => {
     setShowEndModal(true)
   }
 
-  const confirmStopReading = async (pagesReadInSession) => {
+  const confirmStopReading = async (finalPageRead) => {
     if (!selectedBookId || !readingSession) return
 
     const book = readingBooks.find(b => b.id === selectedBookId)
@@ -210,16 +210,26 @@ const HomePage = () => {
     // 세션 시간 계산
     const sessionDuration = Math.floor((new Date() - readingSession.startTime) / 1000)
 
-    // 날짜별 독서 기록 저장 (백엔드) - 이번 세션에서 읽은 페이지 수를 전달
-    const saveResult = await saveReadingSession(
-      bookId,
-      book.title,
-      book.author,
-      book.thumbnail || '',
-      pagesReadInSession, // 이번 세션에서 읽은 페이지 수
-      sessionDuration,
-      readingSession.startTime
-    )
+    // 최종 읽은 페이지를 백엔드에 직접 업데이트
+    try {
+      // 책의 readPage를 최종 읽은 페이지로 업데이트
+      await bookAPI.updateBook(bookId, {
+        readPage: finalPageRead
+      })
+
+      // 날짜별 독서 기록 저장 (백엔드) - 이번 세션에서 읽은 페이지 수 계산
+      const currentReadPage = book.readPage || 0
+      const pagesReadInSession = Math.max(0, finalPageRead - currentReadPage)
+      
+      const saveResult = await saveReadingSession(
+        bookId,
+        book.title,
+        book.author,
+        book.thumbnail || '',
+        pagesReadInSession, // 이번 세션에서 읽은 페이지 수
+        sessionDuration,
+        readingSession.startTime
+      )
 
     // 백엔드에서 책 목록 다시 로드 (진행률은 백엔드에서 자동 업데이트됨)
     let completedBook = null
