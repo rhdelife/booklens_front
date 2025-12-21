@@ -238,7 +238,7 @@ const HomePage = () => {
       const reading = transformedBooks.filter(b => b.status === 'reading')
       setReadingBooks(reading)
 
-      // 완독 체크: readPage가 totalPage 이상인지 확인
+      // 완독 체크: readPage가 totalPage 이상인지 확인 (백엔드 status와 무관하게 판단)
       const updatedBook = transformedBooks.find(b => b.id === bookId)
       const isCompleted = updatedBook && updatedBook.totalPage > 0 && (updatedBook.readPage || 0) >= updatedBook.totalPage
 
@@ -250,9 +250,12 @@ const HomePage = () => {
       setShowEndModal(false)
       setSelectedBookId(null)
 
-      // 완독된 경우 즉시 포스팅 페이지로 리다이렉트
+      // 완독된 경우 마이라이브러리 페이지로 이동하여 완독한 책 섹션에 표시
       if (isCompleted && updatedBook) {
-        navigate(`/posting?bookId=${updatedBook.id}`)
+        setToastMessage(`🎉 "${updatedBook.title}" 완독하셨습니다! 마이라이브러리에서 포스팅을 작성해보세요.`)
+        setTimeout(() => {
+          navigate('/mylibrary', { replace: true })
+        }, 1500)
         return
       } else {
         setToastMessage(saveResult?.message || '독서가 종료되었습니다.')

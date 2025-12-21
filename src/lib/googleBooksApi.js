@@ -14,20 +14,30 @@ const hasValidApiKey = () => {
 
 /**
  * 한국어 책 필터링 함수
- * 한국어로 제공되는 문학/비문학 서적만 허용
+ * 한국어로 제공되는 문학/비문학 서적만 허용 (완화된 필터)
  */
 const filterKoreanBooks = (book) => {
   const volumeInfo = book.volumeInfo || {}
   
-  // 1. 언어 필터: 한국어만 허용
+  // 1. 언어 필터: 한국어 우선, 언어 정보가 없으면 제목/저자로 판단
   const language = volumeInfo.language || ''
-  if (language !== 'ko' && language !== 'ko-KR') {
-    return false
+  const title = volumeInfo.title || ''
+  const authors = volumeInfo.authors || []
+  const hasKoreanChar = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(title) || 
+                       authors.some(author => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(author))
+  
+  // 언어 정보가 있으면 한국어만 허용, 없으면 한국어 문자가 있으면 허용
+  if (language && language !== 'ko' && language !== 'ko-KR') {
+    // 언어가 명시되어 있고 한국어가 아니면 제외
+    // 단, 한국어 문자가 있으면 허용 (번역서 등)
+    if (!hasKoreanChar) {
+      return false
+    }
   }
   
   // 2. 인쇄 타입 필터: 책만 허용 (잡지, 논문 제외)
   const printType = book.saleInfo?.printType || volumeInfo.printType || 'BOOK'
-  if (printType !== 'BOOK') {
+  if (printType && printType !== 'BOOK') {
     return false
   }
   
@@ -48,16 +58,8 @@ const filterKoreanBooks = (book) => {
     return false
   }
   
-  // 4. 제목/저자에 한국어 문자가 있는지 확인 (선택적 필터)
-  const title = volumeInfo.title || ''
-  const authors = volumeInfo.authors || []
-  const hasKoreanChar = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(title) || 
-                       authors.some(author => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(author))
-  
-  // 한국어 문자가 없어도 언어가 ko면 허용 (번역서 포함)
-  
-  // 5. 필수 정보 확인
-  if (!title || !volumeInfo.imageLinks) {
+  // 4. 필수 정보 확인: 제목만 필수, 이미지는 선택적
+  if (!title) {
     return false
   }
   

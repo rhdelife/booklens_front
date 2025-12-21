@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useDarkMode } from '../contexts/DarkModeContext'
+import { bookAPI } from '../services/api'
 
 const PostingPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const { isDark } = useDarkMode()
   const book = location.state?.book
   const editingPosting = location.state?.editingPosting
   const isEditing = !!editingPosting
+  const bookIdFromQuery = searchParams.get('bookId')
 
   const [formData, setFormData] = useState({
     title: '',
@@ -20,15 +23,45 @@ const PostingPage = () => {
   })
 
   const [currentBook, setCurrentBook] = useState(book)
+  const [isLoadingBook, setIsLoadingBook] = useState(false)
 
   useEffect(() => {
-    // 책 정보가 없으면 localStorage에서 완독 책 찾기 (테스트용)
+    // bookId 쿼리 파라미터가 있으면 백엔드에서 책 정보 로드
+    if (bookIdFromQuery && !currentBook) {
+      setIsLoadingBook(true)
+      bookAPI.getBookById(Number(bookIdFromQuery))
+        .then(response => {
+          const bookData = response.data || response
+          // 필드명 변환
+          const transformedBook = {
+            ...bookData,
+            totalPage: bookData.total_page ?? bookData.totalPage,
+            readPage: bookData.read_page ?? bookData.readPage,
+            totalReadingTime: bookData.total_reading_time ?? bookData.totalReadingTime,
+            startDate: bookData.start_date ?? bookData.startDate,
+            completedDate: bookData.completed_date ?? bookData.completedDate,
+            publishDate: bookData.publish_date ?? bookData.publishDate,
+          }
+          setCurrentBook(transformedBook)
+        })
+        .catch(error => {
+          console.error('Failed to load book:', error)
+          // 책 정보 로드 실패 시 마이라이브러리로 리다이렉트
+          navigate('/mylibrary')
+        })
+        .finally(() => {
+          setIsLoadingBook(false)
+        })
+      return
+    }
+
+    // 책 정보가 없으면 localStorage에서 완독 책 찾기 (폴백)
     if (!currentBook) {
       try {
         const savedBooks = localStorage.getItem('myLibraryBooks')
         if (savedBooks) {
           const allBooks = JSON.parse(savedBooks)
-          const completedBook = allBooks.find(b => b.status === 'completed')
+          const completedBook = allBooks.find(b => b.status === 'completed' || (b.totalPage > 0 && (b.readPage || 0) >= b.totalPage))
           if (completedBook) {
             setCurrentBook(completedBook)
             return
@@ -51,7 +84,18 @@ const PostingPage = () => {
         tags: editingPosting.tags ? editingPosting.tags.join(', ') : ''
       })
     }
-  }, [currentBook, navigate, isEditing, editingPosting])
+  }, [currentBook, navigate, isEditing, editingPosting, bookIdFromQuery])
+
+  if (isLoadingBook) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#29303A] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-gray-100 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">책 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!currentBook) {
     return null

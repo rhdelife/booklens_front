@@ -219,7 +219,12 @@ const MyLibraryPage = () => {
   // Calculate statistics
   const totalBooks = books.length
   const readingBooks = books.filter(book => book.status === 'reading')
-  const completedBooks = books.filter(book => book.status === 'completed')
+  // 완독한 책: status가 'completed'이거나 readPage >= totalPage인 경우
+  const completedBooks = books.filter(book => {
+    const isCompletedByStatus = book.status === 'completed'
+    const isCompletedByPages = book.totalPage > 0 && (book.readPage || 0) >= book.totalPage
+    return isCompletedByStatus || isCompletedByPages
+  })
 
   // 총 독서 시간 계산
   const totalReadingTime = books.reduce((sum, book) => sum + (book.totalReadingTime || 0), 0)
@@ -386,20 +391,25 @@ const MyLibraryPage = () => {
       }))
       setBooks(transformedBooks)
 
-      // 완독 체크: readPage가 totalPage 이상인지 확인
+      // 완독 체크: readPage가 totalPage 이상인지 확인 (백엔드 status와 무관하게 판단)
       const updatedBook = transformedBooks.find(b => b.id === bookId)
       const isCompleted = updatedBook && updatedBook.totalPage > 0 && (updatedBook.readPage || 0) >= updatedBook.totalPage
 
       localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
 
-      // 완독된 경우 즉시 포스팅 페이지로 리다이렉트
+      // 완독된 경우 완독한 책 섹션에 표시되도록 하고, 포스팅 작성 모달 열기
       if (isCompleted && updatedBook) {
         // 세션 종료
         setReadingSession(null)
         setShowEndModal(false)
         setSelectedBookId(null)
-        // 바로 포스팅 페이지로 이동
-        navigate(`/posting?bookId=${updatedBook.id}`)
+        // 완독한 책을 포스팅 작성 모달로 열기
+        setSelectedBookForPosting(updatedBook)
+        setShowPostingModal(true)
+        setToastMessage(`🎉 "${updatedBook.title}" 완독하셨습니다! 포스팅을 작성해보세요.`)
+        setTimeout(() => setToastMessage(''), 3000)
+        // 페이지 상단으로 스크롤 (완독한 책 섹션 보이도록)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       } else {
         setToastMessage(saveResult?.message || '독서가 종료되었습니다.')
@@ -435,19 +445,35 @@ const MyLibraryPage = () => {
   }
 
   const handleDeleteBook = async (bookId) => {
-    if (window.confirm('정말 이 책을 삭제하시겠습니까?')) {
+    if (window.confirm('정말 이 책을 삭제하시겠습니까?\n\n참고: 이 책과 관련된 독서 기록도 함께 삭제됩니다.')) {
       try {
         await bookAPI.deleteBook(bookId)
         // 백엔드에서 최신 책 목록 다시 로드
         const allBooks = await bookAPI.getMyBooks()
-        setBooks(allBooks)
-        localStorage.setItem('myLibraryBooks', JSON.stringify(allBooks))
+        // 필드명 변환
+        const transformedBooks = allBooks.map(book => ({
+          ...book,
+          totalPage: book.total_page ?? book.totalPage,
+          readPage: book.read_page ?? book.readPage,
+          totalReadingTime: book.total_reading_time ?? book.totalReadingTime,
+          startDate: book.start_date ?? book.startDate,
+          completedDate: book.completed_date ?? book.completedDate,
+          publishDate: book.publish_date ?? book.publishDate,
+        }))
+        setBooks(transformedBooks)
+        localStorage.setItem('myLibraryBooks', JSON.stringify(transformedBooks))
         setToastMessage('책이 삭제되었습니다.')
         setTimeout(() => setToastMessage(''), 3000)
       } catch (error) {
         console.error('Failed to delete book:', error)
-        setToastMessage('책 삭제에 실패했습니다.')
-        setTimeout(() => setToastMessage(''), 3000)
+        // 에러 메시지 개선
+        const errorMessage = error.message || '알 수 없는 오류'
+        if (errorMessage.includes('Foreign key') || errorMessage.includes('constraint')) {
+          setToastMessage('책 삭제에 실패했습니다. 이 책과 관련된 독서 기록이 있어 삭제할 수 없습니다. 백엔드에서 관련 기록을 먼저 삭제해야 합니다.')
+        } else {
+          setToastMessage(`책 삭제에 실패했습니다: ${errorMessage}`)
+        }
+        setTimeout(() => setToastMessage(''), 5000)
       }
     }
   }
@@ -1050,8 +1076,8 @@ const MyLibraryPage = () => {
                           <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full transition-all duration-300 ${isCompleted
-                                  ? 'bg-green-600 dark:bg-green-500'
-                                  : 'bg-gray-900 dark:bg-gray-100'
+                                ? 'bg-green-600 dark:bg-green-500'
+                                : 'bg-gray-900 dark:bg-gray-100'
                                 }`}
                               style={{ width: `${progressPercentage}%` }}
                             ></div>
