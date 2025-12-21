@@ -231,9 +231,7 @@ const HomePage = () => {
         readingSession.startTime
       )
 
-    // 백엔드에서 책 목록 다시 로드 (진행률은 백엔드에서 자동 업데이트됨)
-    let completedBook = null
-    try {
+      // 백엔드에서 책 목록 다시 로드 (진행률은 백엔드에서 자동 업데이트됨)
       const allBooks = await bookAPI.getMyBooks()
       // 필드명 변환
       const transformedBooks = allBooks.map(book => ({
