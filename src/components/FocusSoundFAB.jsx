@@ -33,11 +33,10 @@ export default function FocusSoundFAB() {
                 <button
                   key={key}
                   onClick={() => changeSound(key)}
-                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 ${
-                    soundType === key
-                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-md'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
+                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 ${soundType === key
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
                 >
                   {soundLabels[key]}
                 </button>
@@ -81,11 +80,10 @@ export default function FocusSoundFAB() {
           {/* Play/Pause 버튼 */}
           <button
             onClick={togglePlay}
-            className={`w-full py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
-              isActive
-                ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900'
-            }`}
+            className={`w-full py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${isActive
+              ? 'bg-red-500 hover:bg-red-600 text-white'
+              : 'bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900'
+              }`}
           >
             {isActive ? '⏸ Pause' : '▶ Play'}
           </button>
@@ -95,9 +93,8 @@ export default function FocusSoundFAB() {
       {/* FAB 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-          isActive ? 'ring-2 ring-gray-400 dark:ring-gray-600 ring-offset-2' : ''
-        }`}
+        className={`w-14 h-14 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${isActive ? 'ring-2 ring-gray-400 dark:ring-gray-600 ring-offset-2' : ''
+          }`}
         aria-label="Focus sound controls"
       >
         {isActive ? (
@@ -105,7 +102,7 @@ export default function FocusSoundFAB() {
             <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
           </svg>
         ) : (
-          <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 flex-shrink-0 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M6.343 6.343l11.314 11.314" />
           </svg>
         )}

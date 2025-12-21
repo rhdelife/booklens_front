@@ -12,9 +12,24 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, setOAuthUser } = useAuth()
   const { isDark } = useDarkMode()
   const navigate = useNavigate()
+
+  // 더미데이터로 로그인 (개발 환경에서만)
+  const handleDummyLogin = import.meta.env.DEV ? () => {
+    const dummyUser = {
+      id: 1,
+      email: 'dummy@example.com',
+      name: '테스트 사용자',
+      nickname: '테스트',
+      createdAt: new Date().toISOString(),
+    }
+    const dummyToken = 'dummy_token_' + Date.now()
+
+    setOAuthUser(dummyUser, dummyToken)
+    navigate('/')
+  } : undefined
 
   // 실시간 검증
   const validateField = (field, value) => {
@@ -115,9 +130,8 @@ const LoginPage = () => {
                   validateField('email', e.target.value)
                 }}
                 onBlur={(e) => validateField('email', e.target.value)}
-                className={`w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm ${
-                  errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
-                }`}
+                className={`w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm ${errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
+                  }`}
                 placeholder="example@email.com"
               />
               {errors.email && (
@@ -141,9 +155,8 @@ const LoginPage = () => {
                   validateField('password', e.target.value)
                 }}
                 onBlur={(e) => validateField('password', e.target.value)}
-                className={`w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm ${
-                  errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
-                }`}
+                className={`w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm ${errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
+                  }`}
                 placeholder="비밀번호를 입력하세요"
               />
               {errors.password && (
@@ -174,9 +187,9 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 py-3.5 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="w-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 py-3.5 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center text-center"
             >
-              {loading ? '로그인 중...' : '로그인'}
+              <span className="text-center w-full">{loading ? '로그인 중...' : '로그인'}</span>
             </button>
           </form>
 
@@ -196,7 +209,7 @@ const LoginPage = () => {
                 onClick={startGoogleLogin}
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 text-sm"
               >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-3 flex-shrink-0" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -216,6 +229,17 @@ const LoginPage = () => {
                 </svg>
                 Google로 로그인
               </button>
+
+              {/* 개발 환경에서만 더미 로그인 버튼 표시 */}
+              {import.meta.env.DEV && handleDummyLogin && (
+                <button
+                  type="button"
+                  onClick={handleDummyLogin}
+                  className="w-full flex items-center justify-center px-4 py-3 border border-purple-200 dark:border-purple-700 rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all duration-200 text-sm"
+                >
+                  🧪 더미데이터로 로그인 (개발용)
+                </button>
+              )}
             </div>
           </div>
 

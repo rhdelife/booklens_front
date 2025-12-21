@@ -289,13 +289,13 @@ const HomePage = () => {
             <div className="flex justify-center gap-4">
               <Link
                 to="/signup"
-                className="bg-gray-900 text-white px-8 py-3.5 rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
+                className="bg-gray-900 text-white px-8 py-3.5 rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm flex items-center justify-center"
               >
                 시작하기
               </Link>
               <Link
                 to="/mylibrary"
-                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-8 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm"
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-8 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm flex items-center justify-center"
               >
                 내 서재
               </Link>
@@ -412,7 +412,7 @@ const HomePage = () => {
                               e.stopPropagation()
                               handleStopReading(book.id)
                             }}
-                            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
+                            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm flex items-center justify-center"
                           >
                             읽기 종료
                           </button>
@@ -422,7 +422,7 @@ const HomePage = () => {
                               e.stopPropagation()
                               handleStartReading(book.id)
                             }}
-                            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm"
+                            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium text-sm flex items-center justify-center"
                           >
                             읽기 시작
                           </button>

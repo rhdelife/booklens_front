@@ -273,14 +273,14 @@ const PostingPage = () => {
               <button
                 type="button"
                 onClick={() => navigate('/mylibrary')}
-                className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm"
+                className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm flex items-center justify-center"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!formData.content.trim()}
-                className="flex-1 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 font-medium disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-sm"
+                className="flex-1 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200 font-medium disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-sm flex items-center justify-center"
               >
                 {isEditing ? 'Edit Posting' : 'Write a Posting'}
               </button>

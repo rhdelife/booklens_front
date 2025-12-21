@@ -94,10 +94,10 @@ const OAuthCallbackPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm">로그인 처리 중...</p>
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#29303A] flex items-center justify-center">
+        <div className="text-center flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-gray-100 mb-4 flex items-center justify-center"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">로그인 처리 중...</p>
         </div>
       </div>
     )

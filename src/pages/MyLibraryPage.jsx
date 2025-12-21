@@ -575,7 +575,7 @@ const MyLibraryPage = () => {
                     setSearchQuery('')
                     setSearchResults([])
                   }}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm ${searchMode === 'isbn'
+                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm flex items-center justify-center ${searchMode === 'isbn'
                     ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                     }`}
@@ -589,7 +589,7 @@ const MyLibraryPage = () => {
                     setFormData({ ...formData, isbn: '' })
                     setBookSearchError('')
                   }}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm ${searchMode === 'title'
+                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 text-sm flex items-center justify-center ${searchMode === 'title'
                     ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                     }`}
@@ -620,7 +620,7 @@ const MyLibraryPage = () => {
                       type="button"
                       onClick={handleSearchByISBN}
                       disabled={isLoadingBook || !formData.isbn.trim()}
-                      className="px-6 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap text-sm"
+                      className="px-6 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap text-sm flex items-center justify-center"
                     >
                       {isLoadingBook ? '검색 중...' : '검색'}
                     </button>
@@ -837,13 +837,13 @@ const MyLibraryPage = () => {
                     setSearchResults([])
                     setSearchMode('isbn')
                   }}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                  className="px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center justify-center"
                 >
                   추가하기
                 </button>
