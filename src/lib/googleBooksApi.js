@@ -14,22 +14,26 @@ const hasValidApiKey = () => {
 
 /**
  * 한국어 책 필터링 함수
- * 한국어로 제공되는 문학/비문학 서적만 허용 (완화된 필터)
+ * 한국어로 제공되는 문학/비문학 서적만 허용
  */
 const filterKoreanBooks = (book) => {
   const volumeInfo = book.volumeInfo || {}
   
-  // 1. 언어 필터: 한국어 우선, 언어 정보가 없으면 제목/저자로 판단
+  // 1. 언어 필터: 한국어 우선, 언어 정보가 없을 때만 제목/저자로 판단
   const language = volumeInfo.language || ''
   const title = volumeInfo.title || ''
   const authors = volumeInfo.authors || []
   const hasKoreanChar = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(title) || 
                        authors.some(author => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(author))
   
-  // 언어 정보가 있으면 한국어만 허용, 없으면 한국어 문자가 있으면 허용
-  if (language && language !== 'ko' && language !== 'ko-KR') {
-    // 언어가 명시되어 있고 한국어가 아니면 제외
-    // 단, 한국어 문자가 있으면 허용 (번역서 등)
+  // 언어 정보가 있으면 한국어(ko, ko-KR)만 허용
+  // 언어 정보가 없을 때만 한국어 문자로 판단
+  if (language) {
+    if (language !== 'ko' && language !== 'ko-KR') {
+      return false
+    }
+  } else {
+    // 언어 정보가 없을 때는 한국어 문자가 있어야 함
     if (!hasKoreanChar) {
       return false
     }
@@ -58,12 +62,36 @@ const filterKoreanBooks = (book) => {
     return false
   }
   
-  // 4. 필수 정보 확인: 제목만 필수, 이미지는 선택적
+  // 4. 필수 정보 확인: 제목 필수, 이미지는 선택적 (기본 이미지 사용 가능)
   if (!title) {
     return false
   }
   
   return true
+}
+
+/**
+ * 한국 출판사 여부 확인 함수
+ */
+const isKoreanPublisher = (publisher) => {
+  if (!publisher) return false
+  
+  // 출판사명에 한국어 문자가 있는지 확인
+  const hasKoreanChar = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(publisher)
+  
+  // 알려진 한국 출판사 키워드
+  const koreanPublisherKeywords = [
+    '출판사', '출판', '도서', '문학', '문화', '서울', '한국',
+    '교보문고', '예문', '문학동네', '창비', '민음사', '열린책들',
+    '웅진', '아이세움', '시공사', '다산', '김영사', '해냄',
+    '북하우스', '알에이치코리아', 'RHK', 'RH코리아'
+  ]
+  
+  const hasKeyword = koreanPublisherKeywords.some(keyword => 
+    publisher.toLowerCase().includes(keyword.toLowerCase())
+  )
+  
+  return hasKoreanChar || hasKeyword
 }
 
 /**
@@ -173,8 +201,8 @@ export const searchBooks = async (query) => {
       return []
     }
 
-    // 한국어 책만 필터링
-    return data.items
+    // 한국어 책만 필터링 및 한국 출판사 우선 정렬
+    const filteredBooks = data.items
       .filter(item => filterKoreanBooks(item))
       .map(item => {
         const book = item.volumeInfo
@@ -197,6 +225,16 @@ export const searchBooks = async (query) => {
           infoLink: book.infoLink || '',
         }
       })
+    
+    // 한국 출판사를 우선적으로 정렬
+    return filteredBooks.sort((a, b) => {
+      const aIsKorean = isKoreanPublisher(a.publisher)
+      const bIsKorean = isKoreanPublisher(b.publisher)
+      
+      if (aIsKorean && !bIsKorean) return -1
+      if (!aIsKorean && bIsKorean) return 1
+      return 0 // 같은 우선순위면 원래 순서 유지
+    })
   } catch (error) {
     console.error('Google Books API 오류:', error)
     throw error
