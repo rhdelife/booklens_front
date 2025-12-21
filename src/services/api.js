@@ -93,7 +93,24 @@ const apiRequest = async (endpoint, options = {}, retryCount = 0) => {
 
     if (!response.ok) {
       // 에러 응답 처리 (백엔드가 { error: string } 형식 사용)
-      const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`
+      let errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`
+      
+      // 백엔드에서 반환하는 에러 객체에서 메시지 추출
+      if (typeof data === 'object' && data.error) {
+        if (typeof data.error === 'string') {
+          errorMessage = data.error
+        } else if (data.error.message) {
+          errorMessage = data.error.message
+        }
+      }
+      
+      // 데이터베이스 연결 오류 메시지 정규화
+      if (errorMessage.includes("Can't reach database server") || 
+          errorMessage.includes('P1001') ||
+          errorMessage.includes('PrismaClient')) {
+        errorMessage = '데이터베이스 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      }
+      
       const error = new Error(errorMessage)
       
       // 재시도 가능한 오류이고 재시도 횟수가 남아있으면 재시도

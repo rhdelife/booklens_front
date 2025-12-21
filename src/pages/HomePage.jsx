@@ -271,7 +271,21 @@ const HomePage = () => {
       }
     } catch (error) {
       console.error('Failed to update book:', error)
-      setToastMessage('독서 기록 저장에 실패했습니다.')
+      const errorMessage = error.message || '알 수 없는 오류'
+      
+      // 데이터베이스 연결 오류 감지
+      if (errorMessage.includes('database') || 
+          errorMessage.includes('connection') || 
+          errorMessage.includes("Can't reach database") ||
+          errorMessage.includes('P1001') ||
+          errorMessage.includes('PrismaClient')) {
+        setToastMessage('데이터베이스 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      } else if (errorMessage.includes('서버에 연결할 수 없습니다')) {
+        setToastMessage('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
+      } else {
+        setToastMessage(`독서 기록 저장에 실패했습니다: ${errorMessage}`)
+      }
+      setTimeout(() => setToastMessage(''), 5000)
     }
   }
 

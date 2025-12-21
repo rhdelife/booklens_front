@@ -419,7 +419,21 @@ const MyLibraryPage = () => {
       }
     } catch (error) {
       console.error('Failed to save reading session:', error)
-      setToastMessage('독서 기록 저장에 실패했습니다.')
+      const errorMessage = error.message || '알 수 없는 오류'
+      
+      // 데이터베이스 연결 오류 감지
+      if (errorMessage.includes('database') || 
+          errorMessage.includes('connection') || 
+          errorMessage.includes("Can't reach database") ||
+          errorMessage.includes('P1001') ||
+          errorMessage.includes('PrismaClient')) {
+        setToastMessage('데이터베이스 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      } else if (errorMessage.includes('서버에 연결할 수 없습니다')) {
+        setToastMessage('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
+      } else {
+        setToastMessage(`독서 기록 저장에 실패했습니다: ${errorMessage}`)
+      }
+      setTimeout(() => setToastMessage(''), 5000)
     }
 
     // 세션 종료
@@ -470,8 +484,18 @@ const MyLibraryPage = () => {
         console.error('Failed to delete book:', error)
         // 에러 메시지 개선
         const errorMessage = error.message || '알 수 없는 오류'
-        if (errorMessage.includes('Foreign key') || errorMessage.includes('constraint')) {
-          setToastMessage('책 삭제에 실패했습니다. 이 책과 관련된 독서 기록이 있어 삭제할 수 없습니다. 백엔드에서 관련 기록을 먼저 삭제해야 합니다.')
+        
+        // 데이터베이스 연결 오류 감지
+        if (errorMessage.includes('database') || 
+            errorMessage.includes('connection') || 
+            errorMessage.includes("Can't reach database") ||
+            errorMessage.includes('P1001') ||
+            errorMessage.includes('PrismaClient')) {
+          setToastMessage('데이터베이스 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+        } else if (errorMessage.includes('Foreign key') || errorMessage.includes('constraint')) {
+          setToastMessage('책 삭제에 실패했습니다. 이 책과 관련된 독서 기록이 있어 삭제할 수 없습니다.')
+        } else if (errorMessage.includes('서버에 연결할 수 없습니다')) {
+          setToastMessage('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
         } else {
           setToastMessage(`책 삭제에 실패했습니다: ${errorMessage}`)
         }
